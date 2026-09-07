@@ -1,0 +1,34 @@
+[
+  {
+    "id": "TASK-01",
+    "title": "Görev Başlığı (Örn: Kullanıcı Kimlik Doğrulama Modülü)",
+    "description": "Görevin detaylı iş gereksinimleri, teslim edilecek iş değeri ve mimari beklentiler.",
+    "status": "pending",
+    "priority": "high",
+    "dependencies": [],
+    "assignedSquad": {
+      "orchestrator": "project-manager",
+      "analyst": "business-analyst",
+      "architect": "solution-architect",
+      "ux": "uiux-designer",
+      "developers": [
+        "backend-engineer",
+        "razor-specialist"
+      ],
+      "reviewers": [
+        "qa-tester",
+        "security-reviewer"
+      ]
+    },
+    "dorMet": false,
+    "dodMet": false,
+    "artifacts": {
+      "userStory": "",
+      "acceptanceCriteria": [],
+      "architectureDecisions": [],
+      "uiDesignTokens": [],
+      "testsWritten": [],
+      "securityAuditPassed": false
+    }
+  }
+]
