@@ -77,6 +77,26 @@ Tüm görevler aşağıdaki 5 aşamalı katı el sıkışma zincirini izler:
 
 ---
 
+## 🛡️ Otomatik Analiz ve Denetim Motorları (100% Ücretsiz & Açık Kaynak)
+
+Agent Squad, personeların manuel incelemesini desteklemek için sektör lideri iki otomatik analiz motoruyla tam entegre çalışır:
+
+### 1. Semgrep MCP Server (OWASP Top 10 Güvenlik Taraması)
+* **Araç:** [`semgrep/mcp`](https://github.com/semgrep/semgrep/tree/main/src/semgrep/mcp)
+* **Kullanım:** `mcp_config.json` içine eklenir. `security-reviewer` personası `git diff` ile sadece değişen dosyalardaki SQL Injection, XSS, CSRF, IDOR ve Hardcoded Secrets açıklarını tarar.
+```json
+"semgrep": {
+  "command": "uvx",
+  "args": ["semgrep-mcp", "-t", "stdio"]
+}
+```
+
+### 2. SonarAnalyzer.CSharp & Roslynator (Clean Code & Code Smell)
+* **Araç:** SonarSource'un resmi Roslyn tabanlı C# kural motoru.
+* **Kullanım:** Projenin kök dizinindeki `Directory.Build.props` ile harici bir SonarQube sunucusu gerekmeksizin tüm Sonar Clean Code kurallarını (`Sxxxx`) derleyici zamanında çalıştırır.
+
+---
+
 ## 🚀 Projelerinizde Nasıl Kullanılır?
 
 Agent Squad mimarisini herhangi bir yazılım projesinde devreye almak son derece basittir:

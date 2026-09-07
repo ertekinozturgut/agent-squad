@@ -206,34 +206,51 @@ Bu rehber, bir görevin tamamlanmasından önceki **en son ve en katı onay kap�
 
 ---
 
-## 📋 3. Adım Adım Güvenlik ve Kalite İnceleme Prosedürü (SOP)
+## 🤖 3. Otomatik Denetim Araçları: Semgrep MCP & SonarAnalyzer
+
+Denetçi, manuel gözlemin yanı sıra sisteme entegre edilen iki ücretsiz ve güçlü analiz motorunu kullanır:
+
+### A. Semgrep MCP Server (OWASP & Güvenlik Taraması)
+* `mcp_config.json` içinde tanımlı **`semgrep`** MCP sunucusu kullanılır.
+* **Taranacak Kapsam:** `git diff --name-only` ile tespit edilen yeni/değişen dosya içerikleri.
+* **Kurallar:** OWASP Top 10 (SQL Injection, XSS, SSRF, Deserialization, Hardcoded Secrets).
+* **Kullanım:** Security Reviewer, değişen dosyaların içeriklerini `semgrep_scan` aracıyla otomatik taratır. Tek bir HIGH/CRITICAL bulguda derhal RED verir.
+
+### B. SonarAnalyzer.CSharp & Roslynator (Clean Code & Kod Kokusu)
+* Projedeki `Directory.Build.props` üzerinden tüm projelere entegre edilmiştir.
+* **Denetim:** `dotnet build` çalıştırıldığında SonarSource'un tüm `Sxxxx` (örn: `S6966`, `S2325`, `S1186`) kuralları derleme zamanında çalışır.
+* **Kural:** Derleme çıktısında tek bir Sonar kural ihlali (`warning`) dahi varsa görev DoD onayını alamaz.
+
+---
+
+## 📋 4. Adım Adım Güvenlik ve Kalite İnceleme Prosedürü (SOP)
 
 Bir görevi incelerken şu 5 adımlı standart denetim prosedürünü harfiyen uygula:
 
 ```text
-[Adım 1: Statik Kod & Güvenlik Taraması]
+[Adım 1: Git Diff & Semgrep MCP Taraması]
+  ├── 'git diff --name-only' ile sadece değişen dosyaları listele.
+  └── Semgrep MCP 'semgrep_scan' ile OWASP Top 10 ve güvenlik zafiyetlerini tara.
+
+[Adım 2: Statik Kod & Güvenlik Denetimi]
   ├── Controller Action'larında [ValidateAntiForgeryToken] var mı?
   ├── URL/Route ID'leri kullanıcı yetkisiyle (IDOR) doğrulanıyor mu?
   └── Action parametrelerinde çıplak Domain Entity var mı (Mass-Assignment)?
 
-[Adım 2: Asenkronluk ve Kaynak Denetimi]
+[Adım 3: Asenkronluk ve Kaynak Denetimi]
   ├── .Result, .Wait(), Thread.Sleep var mı? (Varsa KESİN RED)
   ├── async void kullanımı var mı? (Varsa KESİN RED)
   └── IDisposable nesneler düzgün serbest bırakılıyor mu?
 
-[Adım 3: Veri Erişim & Performans Denetimi]
-  ├── Okuma metotlarında .AsNoTracking() kullanılmış mı?
-  ├── Döngü içinde await dbContext sorgusu var mı (N+1)?
-  └── Select projeksiyonu ile sadece gerekli sütunlar mı çekiliyor?
-
-[Adım 4: Derleme ve Uyarı Denetimi]
+[Adım 4: SonarAnalyzer & Derleme Denetimi]
   ├── CLI üzerinden 'dotnet build' çalıştır.
-  └── Çıktıda 1 adet bile uyarı (warning) varsa KESİN RED!
+  └── SonarAnalyzer (Sxxxx) veya Roslyn çıktısında 1 adet bile uyarı varsa KESİN RED!
 
 [Adım 5: Karar & Geri Bildirim]
   ├── Tüm maddeler temizse -> "DoD Onayı Verildi" raporu hazırla.
   └── Tek bir ihlal dahi varsa -> İhlal maddesini, dosya/satır numarasını ve düzeltme önerisini yazarak RED et.
 ```
+
 
 ---
 
