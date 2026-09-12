@@ -13,7 +13,11 @@ Bu kural, ekibin (Squad) görev akışını, roller arası el sıkışma standar
 `tasks.json` dosyasındaki her görev şu döngüyü sırayla takip eder:
 `pending` ➔ `in_progress` ➔ `in_review` ➔ `completed`
 
-1. **WIP Limiti:** Aynı anda sadece **1 görev** `in_progress` olabilir.
+*İstisnai Durumlar:*
+- **Engel Durumu (`blocked`):** Beklenmedik dış bağımlılık veya teknik engel çıktığında görev `blocked` durumuna alınır; gerekçesi `reviewNotes` içine yazılır.
+- **Revizyon / Ret Durumu (`changes_requested`):** QA Tester veya Security Reviewer kapısından geçemeyen görev `changes_requested` durumuna çekilir, `rejectionCount` 1 artırılır ve geliştiriciye geri devredilir.
+
+1. **WIP Limiti:** Aynı anda sadece **1 görev** `in_progress` veya `changes_requested` durumunda olabilir.
 2. **Döngü Tetikleme:** Bir görev `completed` olduğunda orkestratör otomatik olarak sıradaki ilk `pending` görevi seçer.
 
 ---
@@ -22,8 +26,10 @@ Bu kural, ekibin (Squad) görev akışını, roller arası el sıkışma standar
 
 Her görev istisnasız aşağıdaki 5 aşamalı zinciri tamamlamak zorundadır:
 
-```
+```text
 [1. PM] ➔ [2. İş Analisti] ➔ [3. UI/UX & Mimari] ➔ [4. Backend & Razor Dev] ➔ [5. QA & Security] ➔ [PM: Kapanış]
+                                    ▲                                               │
+                                    └────────────── (Red / Revizyon) ───────────────┘
 ```
 
 ### Aşama 1: Kapsam & Analiz (PM ➔ İş Analisti)
@@ -32,21 +38,23 @@ Her görev istisnasız aşağıdaki 5 aşamalı zinciri tamamlamak zorundadır:
 
 ### Aşama 2: Tasarım & Mimari Şartname (Analist ➔ UI/UX & Mimar)
 - **UI/UX Tasarımcısı:** Bootstrap 5.3 grid yapısı, bileşen durumları (hover, focus, disabled, loading) ve form UX şartnamesini hazırlar.
-- **Sistem Mimarı:** Domain modeli, View'a gidecek `ViewModel` kontratı ve Servis arayüzünü tanımlar.
-- **Kapı Kuralı (Definition of Ready - DoR):** Analiz, UX şartnamesi ve ViewModel kontratı hazır olmadan tek bir satır kod yazılamaz.
+- **Sistem Mimarı:** Domain modeli, View'a gidecek `ViewModel` kontratı, uygulanacak **Kurumsal Tasarım Kalıpları (Design Patterns)** ve Servis arayüzünü tanımlar.
+- **Kapı Kuralı (Definition of Ready - DoR):** Analiz, UX şartnamesi, mimari model ve tasarım kalıbı sözleşmesi hazır olmadan tek bir satır kod yazılamaz (`dorMet: true`).
 
 ### Aşama 3: Geliştirme (Mimar & UX ➔ Backend & Razor)
-- **Backend Engineer:** [05-backend-development-clean-code-standards.md](file:///C:/Users/Ertekin/.gemini/antigravity-ide/scratch/DotNet10WebApp/.agents/rules/05-backend-development-clean-code-standards.md) kurallarına (fonksiyon yönetimi, class kapsamı, OOP, guard clauses, max 25 satır) tam uyumlu olarak Servis, Entity Framework Core ve Controller Action metodlarını kodlar.
+- **Backend Engineer:** `05-backend-development-clean-code-standards.md` kurallarına (fonksiyon yönetimi, class kapsamı, OOP, guard clauses, max 25 satır, belirlenen tasarım kalıpları) tam uyumlu olarak Servis, Entity Framework Core ve Controller Action metodlarını kodlar.
 - **Razor Specialist:** Mimarın ViewModel'i ve UX şartnamesine birebir sadık kalarak `.cshtml` sayfasını Tag Helper'lar ve Bootstrap ile giydirir.
 
 ### Aşama 4: Kalite ve Güvenlik Kapısı (Dev ➔ QA & Security)
-- **QA Tester:** Kabul kriterlerini xUnit ve `WebApplicationFactory` entegrasyon testlerine dönüştürür.
-- **Security Reviewer:** OWASP, CSRF (`[ValidateAntiForgeryToken]`), XSS ve Mass Assignment denetimlerini yapar.
+- **QA Tester:** Kabul kriterlerini xUnit ve `WebApplicationFactory` entegrasyon testlerine dönüştürür; sınır değer ve son kullanıcı testlerini yapar.
+- **Security Reviewer:** OWASP, CSRF (`[ValidateAntiForgeryToken]`), XSS, Mass Assignment, tasarım kalıbı güvenliği ve kod kalitesi (SonarAnalyzer) denetimlerini yapar.
+- **Ret Mekanizması:** Tek bir test hatası veya güvenlik/kod kokusu ihlalinde görev `changes_requested` durumuna alınır ve revizyon notlarıyla geliştiriciye iade edilir.
 
 ### Aşama 5: Kapanış (QA & Security ➔ PM)
 - **Kapı Kuralı (Definition of Done - DoD):**
   - Tüm kabul kriterleri karşılandı mı? (Evet)
   - `dotnet build` 0 uyarı, 0 hata ile derlendi mi? (Evet)
   - Tüm xUnit ve entegrasyon testleri yeşil mi? (Evet)
-  - Güvenlik kontrol listesi onaylandı mı? (Evet)
-- Şartlar sağlandığında görev `completed` yapılır ve sıradaki göreve geçilir.
+  - Güvenlik kontrol listesi ve Semgrep/SonarAnalyzer onaylandı mı? (Evet)
+  - Kullanılan Tasarım Kalıpları (Design Patterns) `artifacts.designPatternsUsed` içine belgelendi mi? (Evet)
+- Şartlar sağlandığında görev `completed` yapılır (`dodMet: true`) ve sıradaki göreve geçilir.

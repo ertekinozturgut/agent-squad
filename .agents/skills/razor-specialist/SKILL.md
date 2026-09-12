@@ -1,6 +1,6 @@
 ---
 name: razor-specialist
-description: UI/UX şartnamesini ve ViewModel kontratını alarak modern ASP.NET Core Tag Helper'ları, Bootstrap 5.3 bileşenleri, Partial View'lar ve Unobtrusive Validation ile duyarlı .cshtml sayfaları kodlar.
+description: UI/UX şartnamesini ve ViewModel kontratını alarak modern ASP.NET Core Tag Helper'ları, Bootstrap 5.3 bileşenleri, Partial View'lar ve hem Unobtrusive hem Vanilla JS Validasyonu ile duyarlı .cshtml sayfaları kodlar.
 ---
 
 # Razor & Bootstrap Uzmanlık Rehberi (Production-Grade Razor Edition)
@@ -33,7 +33,7 @@ Bu rehber, UI/UX şartnamesi ve mimari `ViewModel` kontratlarına %100 sadık ka
 Aşağıdaki şablon form hiyerarşisini, geri bildirim alertlerini, loading durumunu ve çift tıklama engellemesini eksiksiz uygular:
 
 ```cshtml
-@model DotNet10WebApp.Web.ViewModels.UpdateProfileViewModel
+@model MyApp.Web.ViewModels.UpdateProfileViewModel
 @{
     ViewData["Title"] = "Profil Düzenleme";
 }
@@ -80,7 +80,7 @@ Aşağıdaki şablon form hiyerarşisini, geri bildirim alertlerini, loading dur
                     @* E-Posta Alanı *@
                     <div class="mb-4">
                         <label asp-for="Email" class="form-label fw-semibold text-secondary"></label>
-                        <input asp-for="Email" class="form-control rounded-3" placeholder="ornek@toyota.com.tr" />
+                        <input asp-for="Email" class="form-control rounded-3" placeholder="ornek@example.com" />
                         <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
                         <div class="form-text text-muted">Resmi bildirimler bu adrese iletilecektir.</div>
                     </div>
@@ -110,9 +110,19 @@ Aşağıdaki şablon form hiyerarşisini, geri bildirim alertlerini, loading dur
             const btnSpinner = document.getElementById("btnSpinner");
             const btnIcon = document.getElementById("btnIcon");
 
-            form.addEventListener("submit", function () {
-                // Client-side validasyon jQuery Validate ile kontrol edilir
-                if ($(form).valid()) {
+            form.addEventListener("submit", function (e) {
+                // Hem jQuery Validate hem de modern HTML5 constraint validation desteği
+                let isValid = true;
+                if (window.jQuery && typeof window.jQuery(form).valid === "function") {
+                    isValid = window.jQuery(form).valid();
+                } else if (typeof form.checkValidity === "function") {
+                    isValid = form.checkValidity();
+                    if (!isValid) {
+                        form.classList.add("was-validated");
+                    }
+                }
+
+                if (isValid) {
                     btnSubmit.setAttribute("disabled", "disabled");
                     btnSpinner.classList.remove("d-none");
                     btnIcon.classList.add("d-none");
@@ -176,5 +186,5 @@ Aşağıdaki şablon form hiyerarşisini, geri bildirim alertlerini, loading dur
 | **6** | **Toast / Alert UX** | İşlem sonucunda `TempData` mesajını gösteren dismissible alert var mı? | Yoksa ➔ Ekle |
 | **7** | **İş Mantığı Yasağı** | Razor içinde C# ile hesaplama veya DB erişimi var mı? | Varsa ➔ KESİN RED |
 | **8** | **Mobil Uyum (Grid)** | Sayfa `col-12 col-md-8 col-lg-6` gibi responsive grid kullanıyor mu? | Sabit genişlikse ➔ RED |
-| **9** | **Client Validasyon** | `@section Scripts` içinde `_ValidationScriptsPartial` çağrılmış mı? | Çağrılmadıysa ➔ Ekle |
+| **9** | **Client Validasyon** | Script bölümünde hem jQuery Validate hem de Vanilla JS uyumlu doğrulama var mı? | Eksikse ➔ Ekle |
 | **10**| **Cache Busting** | Statik script ve css çağrılarında `asp-append-version="true"` var mı? | Yoksa ➔ Ekle |

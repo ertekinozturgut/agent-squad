@@ -3,15 +3,34 @@
 Thumbs.db
 desktop.ini
 
-# IDE files
+# IDE & Editor files
 .idea/
 .vscode/
+.vs/
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# Temporary files
+# .NET Build and Packaging outputs
+bin/
+obj/
+*.binlog
+TestResults/
+[Bb]uild[Ll]og.*
+packages/
+*.nupkg
+
+# Active Squad Task State (Avoid committing local working queue; template is preserved)
+tasks.json
+
+# Local Configuration and Secrets
+appsettings*.Development.json
+appsettings*.Local.json
+*.local.json
+secrets.json
+
+# Temporary files & Logs
 *.tmp
 *.temp
 *.log

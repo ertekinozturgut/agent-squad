@@ -1,5 +1,6 @@
 [
   {
+    "$schema": "./tasks.schema.json",
     "id": "TASK-01",
     "title": "Görev Başlığı (Örn: Kullanıcı Kimlik Doğrulama Modülü)",
     "description": "Görevin detaylı iş gereksinimleri, teslim edilecek iş değeri ve mimari beklentiler.",
@@ -22,10 +23,13 @@
     },
     "dorMet": false,
     "dodMet": false,
+    "rejectionCount": 0,
+    "reviewNotes": [],
     "artifacts": {
       "userStory": "",
       "acceptanceCriteria": [],
       "architectureDecisions": [],
+      "designPatternsUsed": [],
       "uiDesignTokens": [],
       "testsWritten": [],
       "securityAuditPassed": false

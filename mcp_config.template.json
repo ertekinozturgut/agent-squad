@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "semgrep": {
+      "command": "uvx",
+      "args": [
+        "semgrep-mcp",
+        "-t",
+        "stdio"
+      ]
+    }
+  }
+}

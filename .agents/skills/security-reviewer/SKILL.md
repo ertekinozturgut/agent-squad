@@ -254,7 +254,7 @@ Bir görevi incelerken şu 5 adımlı standart denetim prosedürünü harfiyen u
 
 ---
 
-## 🔍 4. Güvenlik ve Kalite Denetçisinin 10 Maddelik Katı Onay Kapısı
+## 🔍 5. Güvenlik ve Kalite Denetçisinin 10 Maddelik Katı Onay Kapısı
 
 | # | Denetim Kriteri | Boyut | Beklenen Standart | İhlal Durumunda Eylem |
 | :--- | :--- | :--- | :--- | :--- |

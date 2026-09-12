@@ -69,8 +69,8 @@ Feature: Kullanıcı Profil Güncelleme (Profile Management)
 
   # Kademe 3: İş Kuralı Çelişkisi ve Edge-Case (Conflict Path)
   Scenario: Başka bir kullanıcıya ait e-posta adresinin girilmesi
-    Given Sistemde "mehmet@toyota.com.tr" e-posta adresine sahip başka bir aktif kullanıcı bulunmaktadır
-    And Kullanıcı kendi profilindeki e-postayı "mehmet@toyota.com.tr" olarak değiştirmeye çalıştığında
+    Given Sistemde "mehmet@example.com" e-posta adresine sahip başka bir aktif kullanıcı bulunmaktadır
+    And Kullanıcı kendi profilindeki e-postayı "mehmet@example.com" olarak değiştirmeye çalıştığında
     When "Değişiklikleri Kaydet" butonuna bastığında
     Then Sistem işlemi engellemeli ve veri tabanını güncellememelidir
     And Sayfada açık ve yönlendirici bir dille "Bu e-posta adresi başka bir hesaba aittir. Şifrenizi mi unuttunuz?" uyarısı gösterilmelidir.

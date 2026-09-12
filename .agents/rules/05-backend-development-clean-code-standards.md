@@ -1,13 +1,14 @@
 # Backend Geliştirme ve Temiz Kod (Clean Code) Kuralları
 
-Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayacağı **fonksiyon yönetimi**, **sınıf tasarımı**, **nesne yönelimli programlama (OOP)** ve **temiz kod (Clean Code)** anayasasını belirler. Tüm backend kodları bu kurallara uymak zorundadır.
+Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayacağı **fonksiyon yönetimi**, **sınıf tasarımı**, **nesne yönelimli programlama (OOP)**, **tasarım kalıpları (Design Patterns)** ve **temiz kod (Clean Code)** anayasasını belirler. Tüm backend kodları bu kurallara uymak zorundadır.
 
 ---
 
 ## 📚 Dayandığı Literatür ve Standartlar
 - **Clean Code: A Handbook of Agile Software Craftsmanship** (Robert C. Martin - Uncle Bob)
-- **Refactoring: Improving the Design of Existing Code** (Martin Fowler)
 - **Design Patterns: Elements of Reusable Object-Oriented Software** (Gang of Four - GoF)
+- **Patterns of Enterprise Application Architecture** (Martin Fowler)
+- **Refactoring: Improving the Design of Existing Code** (Martin Fowler)
 - **Working Effectively with Legacy Code** (Michael Feathers)
 - **Code Complete (2nd Edition)** (Steve McConnell)
 - **C# Coding Conventions & Architecture Guides** (Microsoft)
@@ -69,7 +70,6 @@ Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayac
           {
               if (user.HasSufficientBalance())
               {
-                  // Asıl iş...
                   return Result.Success();
               }
               else { return Result.Failure("Yetersiz bakiye"); }
@@ -86,7 +86,6 @@ Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayac
       if (!user.IsActive) return Result.Failure("Kullanıcı pasif");
       if (!user.HasSufficientBalance()) return Result.Failure("Yetersiz bakiye");
 
-      // Asıl iş mantığı engelsiz akar...
       return Result.Success();
   }
   ```
@@ -130,7 +129,7 @@ Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayac
 
 ---
 
-## 🧩 BÖLÜM 3: Nesne Yönelimli Programlama (OOP) ve SOLID Kuralları
+## 🧩 BÖLÜM 3: Nesne Yönelimli Programlama (OOP) ve Tasarım Kalıpları (Design Patterns)
 
 ### 1. Kapsülleme (Encapsulation) ve İç Durumun Korunması
 - Sınıf değişkenleri (fields) daima `private` olmalıdır.
@@ -141,24 +140,61 @@ Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayac
 - Yalnızca kod tekrarını önlemek için derin miras ağaçları (`BaseService -> GenericService -> CustomService`) kurmak yasaktır.
 - Yeniden kullanılabilirlik (reusability) daima **Arayüzler (Interfaces)** ve **Bağımlılık Enjeksiyonu (Composition via DI)** ile sağlanmalıdır.
 
-### 3. Tip Kontrolü Yerine Çok Biçimlilik (Polymorphism vs Switch/If)
-- Tip veya enum ayrımı yaparak iş mantığı dallandırmak yerine Polymorphism veya Strateji Deseni (Strategy Pattern) kullanılmalıdır:
-  ```csharp
-  // KÖTÜ: Kodun her yerine yayılan switch-case veya if-else blokları
-  public decimal CalculateDiscount(CustomerType type, decimal amount) => type switch
-  {
-      CustomerType.Standard => amount * 0.05m,
-      CustomerType.Premium => amount * 0.15m,
-      CustomerType.Vip => amount * 0.25m,
-      _ => 0m
-  };
+### 3. Kurumsal Tasarım Kalıpları Standartları (GoF & Enterprise)
 
-  // İYİ: Strateji arayüzü ile açık-kapalı ilkesine (OCP) uygun mimari
-  public interface IDiscountStrategy { decimal Calculate(decimal amount); }
+#### A. Strategy Pattern (Açık Dallanma Yönetimi)
+- Tip veya enum ayrımı yaparak iş mantığı dallandırmak (`switch/case`, `if/else`) yerine Polymorphism ve Strateji Deseni kullanılır:
+  ```csharp
+  // KÖTÜ: Her yeni kuralda değişen kırılgan switch yapısı
+  public decimal CalculateDiscount(CustomerType type, decimal amount) => type switch { ... };
+
+  // İYİ: Açık strateji arayüzü ve IoC ile çözülen stratejiler
+  public interface IDiscountStrategy 
+  { 
+      bool AppliesTo(CustomerType type);
+      decimal Calculate(decimal amount); 
+  }
   ```
 
-### 4. Liskov Yerine Geçme İlkesi (LSP)
-- Türetilen hiçbir sınıf, üst sınıfın veya arayüzün vaat ettiği davranışı kısıtlayamaz veya `throw new NotImplementedException()` atamaz. Eğer bir metodu uygulayamıyorsan, o sınıf o arayüzden türememelidir (Arayüz Ayrımı - ISP).
+#### B. Adapter Pattern (Dış Kütüphane ve Servis İzolasyonu)
+- Üçüncü taraf kütüphaneler, SMS/Ödeme API'leri doğrudan domain katmanında tüketilemez. Domain'in ihtiyaç duyduğu arayüz Core'da tanımlanır, Infrastructure katmanında bir Adapter ile dış API adapte edilir:
+  ```csharp
+  // Core/Interfaces/IPaymentGateway.cs
+  public interface IPaymentGateway
+  {
+      Task<Result<PaymentTransactionId>> ChargeAsync(Money amount, PaymentCard card, CancellationToken ct);
+  }
+
+  // Infrastructure/Adapters/StripePaymentAdapter.cs
+  public class StripePaymentAdapter(StripeClient stripeClient) : IPaymentGateway { ... }
+  ```
+
+#### C. Decorator Pattern (Kesişen Endişeler - Cross-Cutting Concerns)
+- Caching, Logging, Exception Auditing gibi davranışları eklemek için temel servis koduna dokunulamaz (Open/Closed Principle). Servis bir Decorator sınıfı ile sarmalanır:
+  ```csharp
+  // İYİ: CachingDecorator ile temiz genişletme
+  public class CachedUserService(IUserService innerService, IMemoryCache cache) : IUserService
+  {
+      public async Task<Result<UserProfileViewModel>> GetProfileAsync(Guid id, CancellationToken ct)
+      {
+          return await cache.GetOrCreateAsync($"user-{id}", _ => innerService.GetProfileAsync(id, ct));
+      }
+      // Diğer metotlar doğrudan innerService'e delege edilir
+  }
+  ```
+
+#### D. Specification Pattern (Sorgulama ve Kural Enkapsülasyonu)
+- Domain varlıklarına uygulanan filtreleme veya doğrulama kuralları Controller veya Service katmanında dağınık LINQ ifadeleri olarak yazılamaz:
+  ```csharp
+  public interface ISpecification<T>
+  {
+      Expression<Func<T, bool>> ToExpression();
+      bool IsSatisfiedBy(T entity);
+  }
+  ```
+
+#### E. Factory & Builder Pattern (Güvenli Nesne Yaratımı)
+- Çok sayıda parametre alan veya iç bağımlılıkları olan nesnelerin doğrudan `new` ile public constructor üzerinden yaratılması yasaktır. Zengin Entity'lerde **Static Factory Metotları** (`User.Create(...)`), test ve karmaşık komutlarda **Builder** kalıbı zorunludur.
 
 ---
 
@@ -171,23 +207,21 @@ Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayac
 
 ### 2. İzci Kuralı (The Boy Scout Rule)
 > *"Her dokunduğun dosyayı, bulduğundan daha temiz bırak."*
-- Bir dosyada bug düzeltirken veya yeni özellik eklerken; yakınındaki kötü isimlendirilmiş değişkeni düzelt, gereksiz using'leri temizle, formatting bozukluğunu gider. Kod tabanı zamanla çürümez, sürekli gençleşir.
+- Bir dosyada bug düzeltirken veya yeni özellik eklerken; yakınındaki kötü isimlendirilmiş değişkeni düzelt, gereksiz using'leri temizle, formatting bozukluğunu gider.
 
 ### 3. Yorum Satırı Kokusu (Comments as Code Smell)
 - Kötü kodu açıklamak için yorum yazılmaz; kod kendini anlatacak kadar açık hale getirilir.
-- Yalnızca **"Neden"** sorusunun cevabı (örneğin üçüncü taraf bir API'nin garip bir davranışını baypas etmek veya yasal bir kuralı belgelemek için) yorum olarak yazılabilir. **"Ne"** yapıldığını anlatan yorumlar temizlenmelidir.
+- Yalnızca **"Neden"** sorusunun cevabı (örneğin yasal bir kuralı belgelemek için) yorum olarak yazılabilir.
 
 ### 4. Sihirli Değerler Yasağı (No Magic Numbers or Strings)
-- Kodun içinde `if (status == 3)` veya `timeout = 86400` gibi bağlamsız değerler bulunamaz.
-- Bunlar anlamlı `enum` veya `const` değerlerine bağlanmalıdır (`OrderStatus.Shipped`, `TimeConstants.OneDayInSeconds`).
+- Kodun içinde `if (status == 3)` veya `timeout = 86400` gibi bağlamsız değerler bulunamaz. Anlamlı `enum` veya `const` değerleri kullanılır.
 
 ### 5. DRY (Don't Repeat Yourself) & YAGNI
-- İş kuralı mantığı tek bir yerde yaşamalıdır.
-- Ancak henüz ortada olmayan varsayımsal ihtiyaçlar için karmaşık altyapılar inşa etmek (YAGNI - You Aren't Gonna Need It) yasaktır. İhtiyaç doğduğunda refactor edilir.
+- İş kuralı mantığı tek bir yerde yaşamalıdır. İhtiyaç doğmadan varsayımsal karmaşıklıklar inşa edilemez (YAGNI).
 
 ---
 
-## 🔍 BÖLÜM 5: Backend Temiz Kod Onay Kapısı (10 Madde)
+## 🔍 BÖLÜM 5: Backend Temiz Kod & Tasarım Kalıbı Onay Kapısı (10 Madde)
 
 | # | Kriter | Sınır / Standart | İhlal Durumu |
 | :--- | :--- | :--- | :--- |
@@ -196,8 +230,8 @@ Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayac
 | **3** | **Bayrak Parametresi** | Metotta `bool flag` parametresi bulunamaz | Varsa ➔ İki ayrı metota böl |
 | **4** | **Guard Clauses** | İç içe derin `if` blokları yasaktır (Max girinti: 2) | Derinlik varsa ➔ Guard clause ile ters çevir |
 | **5** | **Sınıf Satır Sınırı** | Maksimum 250-300 satır | Aşıyorsa ➔ SRP doğrultusunda böl |
-| **6** | **CQS İhlali** | Durum değiştiren metot veri dönmemeli / yan etki yapmamalı | Varsa ➔ Ayrıştır |
-| **7** | **Kapsülleme** | Public field veya kontrolsüz `public set` bulunamaz | Varsa ➔ `private set` ve metot ile koru |
-| **8** | **İsimlendirme** | Anlamsız kısaltma (`temp`, `data`, `res`) bulunamaz | Varsa ➔ Anlamlı isim ver |
+| **6** | **Tasarım Kalıpları** | Switch/enum dallanmalarında Strategy, dış API'de Adapter, kesişen işlerde Decorator | Yoksa ➔ Uygun desene refactor et |
+| **7** | **Kapsülleme** | Public field veya kontrolsüz `public set` bulunamaz | Varsa ➔ `private set` ve fabrika metodu ile koru |
+| **8** | **CQS İhlali** | Durum değiştiren metot veri dönmemeli / gizli yan etki yapmamalı | Varsa ➔ Ayrıştır |
 | **9** | **Sihirli Değerler** | Kod içinde çıplak sayı/metin bulunamaz | Varsa ➔ `const` veya `enum` yap |
-| **10**| **Yorum Kirliliği** | Kodu anlatan gereksiz yorumlar bulunamaz | Varsa ➔ Kodu netleştir, yorumu sil |
+| **10**| **İzci Kuralı & Yorum** | Kodu anlatan gereksiz yorum ve kullanılmayan using'ler | Varsa ➔ Kodu netleştir, fazlalıkları sil |

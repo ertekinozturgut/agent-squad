@@ -109,7 +109,7 @@ Listelenecek veri olmadığında gri boş bir tablo bırakmak yasaktır. Aşağ�
         <i class="bi bi-inbox text-secondary"></i>
     </div>
     <h5 class="fw-bold text-dark mb-1">Henüz Kayıt Bulunmuyor</h5>
-    <p class="text-muted mb-4 mx-auto" style="max-width: 450px;">
+    <p class="text-muted mb-4 col-12 col-md-8 col-lg-6 mx-auto">
         Sistemde tanımlanmış bir kayıt henüz yok. Yeni bir kayıt oluşturarak hemen başlayabilirsiniz.
     </p>
     <div>

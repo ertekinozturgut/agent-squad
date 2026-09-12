@@ -83,11 +83,15 @@ Agent Squad, personeların manuel incelemesini desteklemek için sektör lideri 
 
 ### 1. Semgrep MCP Server (OWASP Top 10 Güvenlik Taraması)
 * **Araç:** [`semgrep/mcp`](https://github.com/semgrep/semgrep/tree/main/src/semgrep/mcp)
-* **Kullanım:** `mcp_config.json` içine eklenir. `security-reviewer` personası `git diff` ile sadece değişen dosyalardaki SQL Injection, XSS, CSRF, IDOR ve Hardcoded Secrets açıklarını tarar.
+* **Kullanım:** `mcp_config.json` (bkz: `mcp_config.template.json`) içine eklenir. `security-reviewer` personası `git diff` ile sadece değişen dosyalardaki SQL Injection, XSS, CSRF, IDOR ve Hardcoded Secrets açıklarını tarar.
 ```json
-"semgrep": {
-  "command": "uvx",
-  "args": ["semgrep-mcp", "-t", "stdio"]
+{
+  "mcpServers": {
+    "semgrep": {
+      "command": "uvx",
+      "args": ["semgrep-mcp", "-t", "stdio"]
+    }
+  }
 }
 ```
 
@@ -107,10 +111,11 @@ Bu depodaki `.agents/` klasörünü hedef projenizin kök dizinine yapıştırı
 cp -r .agents/ /path/to/your/project/.agents/
 ```
 
-### 2. Görev Kuyruğunu Başlatın
-`tasks.template.json` dosyasını `tasks.json` olarak projenizin kök dizinine kopyalayın ve hedeflerinizi atomik görevler olarak tanımlayın:
+### 2. Görev Kuyruğunu ve Şemasını Başlatın
+`tasks.template.json` ve `tasks.schema.json` dosyalarını projenizin kök dizinine kopyalayın ve hedeflerinizi atomik görevler olarak tanımlayın:
 ```bash
 cp tasks.template.json /path/to/your/project/tasks.json
+cp tasks.schema.json /path/to/your/project/tasks.schema.json
 ```
 
 ### 3. Antigravity ile Geliştirmeye Başlayın

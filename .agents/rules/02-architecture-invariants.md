@@ -1,10 +1,11 @@
 # Mimari Değişmezler ve Clean Architecture Standartları
 
-Bu kural, .NET 10 projesinde **Clean Architecture (Temiz Mimari)**, **Domain-Driven Design (DDD)** ve **SOLID** ilkelerinin tavizsiz uygulanmasını güvence altına alır. Tüm geliştirmeler bu anayasaya uymak zorundadır.
+Bu kural, .NET 10 projesinde **Clean Architecture (Temiz Mimari)**, **Domain-Driven Design (DDD)**, **SOLID** ilkeleri ve **Kurumsal Tasarım Kalıpları (Design Patterns)** standartlarının tavizsiz uygulanmasını güvence altına alır. Tüm geliştirmeler bu anayasaya uymak zorundadır.
 
 ## 📚 Dayandığı Literatür ve Standartlar
 - **Clean Architecture: A Craftsman's Guide to Software Structure and Design** (Robert C. Martin - Uncle Bob)
 - **Domain-Driven Design: Tackling Complexity in the Heart of Software** (Eric Evans)
+- **Design Patterns: Elements of Reusable Object-Oriented Software** (Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides - Gang of Four)
 - **Patterns of Enterprise Application Architecture** (Martin Fowler)
 - **Microsoft .NET Architecture Guides (eShopOnWeb Reference Architecture)**
 - **Refactoring: Improving the Design of Existing Code** (Martin Fowler)
@@ -15,28 +16,28 @@ Bu kural, .NET 10 projesinde **Clean Architecture (Temiz Mimari)**, **Domain-Dri
 
 Bağımlılıklar daima içe doğru (Domain/Core yönüne) akar. İç katmanlar dış dünyayı kesinlikle tanımaz:
 
-```
+```text
 [ Web (Presentation / Razor) ] 
        │ 
        ▼
-[ Infrastructure (EF Core / External Services) ] 
+[ Infrastructure (EF Core / External Services / Adapters) ] 
        │ 
        ▼
-[ Core (Domain / Entities / Interfaces / Business Logic) ]
+[ Core (Domain / Entities / Interfaces / Business Logic / Specifications) ]
 ```
 
 ### Katman Sorumluluk Sınırları:
 1. **Core (Domain Katmanı):**
    - Sistemin kalbidir. Hiçbir dış kütüphaneye (`Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore.*`, `Newtonsoft.Json`) bağımlı olamaz.
-   - Yalnızca saf iş modellerini (Entities), değer nesnelerini (Value Objects), domain istisnalarını ve arayüzleri (`IRepository`, `IService`) barındırır.
+   - Yalnızca saf iş modellerini (Entities), değer nesnelerini (Value Objects), domain istisnalarını, arayüzleri (`IRepository`, `IService`) ve Specification kalıplarını barındırır.
 2. **Infrastructure (Altyapı Katmanı):**
-   - Core katmanında tanımlanan arayüzlerin somut uygulamalarını (`DbContext`, Repository implementasyonları, e-posta/SMS servisleri) içerir.
+   - Core katmanında tanımlanan arayüzlerin somut uygulamalarını (`DbContext`, Repository implementasyonları, e-posta/SMS servisleri, harici API Adapter'ları) içerir.
 3. **Web (Sunum / MVC Katmanı):**
    - Sadece HTTP isteklerini karşılama, yönlendirme (Routing), `ViewModel` doğrulama ve Razor `.cshtml` çıktısı üretme işini yapar.
 
 ---
 
-## 2. İhlal Edilemez 8 Clean Architecture Kuralı
+## 2. İhlal Edilemez 10 Clean Architecture ve Tasarım Kalıbı Kuralı
 
 ### 🏛️ Kural 1: Entity Asla View Katmanına Sızamaz (Zorunlu ViewModel Sınırı)
 - Veritabanı Domain Entity'si doğrudan Controller'dan View'a gönderilemez ve View formundan post edilemez.
@@ -82,4 +83,11 @@ Bağımlılıklar daima içe doğru (Domain/Core yönüne) akar. İç katmanlar 
 - Tüm fonksiyonlar maksimum **15-25 satır**, parametre sayısı en fazla **3** ve tek sorumluluklu olmalıdır.
 - Sınıflar maksimum **200-300 satır** olmalı; God Object, Helper ve Manager torba sınıfları yasaktır.
 - Kapsülleme (Encapsulation), Demeter Yasası, CQS ve Guard Clauses tavizsiz işletilmelidir.
-- Ayrıntılı kural seti için: [05-backend-development-clean-code-standards.md](file:///C:/Users/Ertekin/.gemini/antigravity-ide/scratch/DotNet10WebApp/.agents/rules/05-backend-development-clean-code-standards.md).
+- Ayrıntılı kural seti için: `05-backend-development-clean-code-standards.md`.
+
+### 🏛️ Kural 10: Kurumsal Tasarım Kalıpları (Design Patterns) Standartları
+- **Strategy Pattern (Dallanma İzolasyonu):** Birden fazla algoritma veya türe bağlı iş mantığı (enum/switch veya if-else blokları) doğrudan metot içine gömülemez. Açık bir arayüz (`IDiscountStrategy`, `IPaymentStrategy`) ve bağımsız strateji sınıfları üzerinden yönetilmelidir.
+- **Adapter Pattern (Dış Bağımlılık İzolasyonu):** Harici servisler, SMS/Ödeme API'leri veya üçüncü taraf NuGet paketleri Core katmanına sızamaz. Infrastructure katmanında bir Adapter arayüzü ile sarılmalı ve domain modeline adapte edilmelidir.
+- **Decorator Pattern (Kesişen Endişeler - Cross-Cutting):** Caching, Logging, Performance Audit veya Retry gibi işlemler için ana iş mantığı koduna müdahale edilemez; Decorator deseni (veya Scrutor/Castle proxy) ile servis sarmalanmalıdır.
+- **Specification Pattern (Sorgu ve Kural Enkapsülasyonu):** Karmaşık veya tekrar eden LINQ sorgu kriterleri Controller veya Service içinde kopyalanamaz; Specification nesnelerinde (`ISpecification<T>`) toplanmalıdır.
+- **Factory / Builder (Güvenli Nesne İnşası):** İnşası birden fazla adım veya karmaşık invariyant kontrolü gerektiren domain nesnelerinde Static Factory Method veya Builder deseni işletilmelidir.

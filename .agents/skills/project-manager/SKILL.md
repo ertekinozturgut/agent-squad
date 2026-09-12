@@ -21,13 +21,13 @@ Bu rehber, projedeki görev döngüsünün (`tasks.json`), iş kırılım yapıs
 
 ## ⚙️ 2. Görev Durum Makinesi (Task State Machine) ve WIP Limiti
 
-Squad'ın tüm iş akışı tek bir merkezi kuyruk dosyası olan [`tasks.json`](file:///C:/Users/Ertekin/.gemini/antigravity-ide/scratch/DotNet10WebApp/tasks.json) üzerinden yürütülür.
+Squad'ın tüm iş akışı tek bir merkezi kuyruk dosyası olan `tasks.json` (`tasks.schema.json` standardında) üzerinden yürütülür.
 
 ```text
        ┌───────────┐
        │  pending  │ (Kuyrukta bekleyen atomik görev)
        └─────┬─────┘
-             │ [DoR Onayı: Analiz + Mimari + UX Şartnameleri Tamam]
+             │ [DoR Onayı: Analiz + Mimari + Tasarım Kalıbı + UX Şartnameleri Tamam]
              ▼
       ┌─────────────┐
       │ in_progress │ ──(Beklenmedik engel)──► ┌─────────┐
@@ -35,17 +35,23 @@ Squad'ın tüm iş akışı tek bir merkezi kuyruk dosyası olan [`tasks.json`](
              │ [Geliştirme Bitti: Backend + UI] └────┬────┘
              ▼                                       │ (Engel Çözüldü)
        ┌───────────┐                                 │
-       │ in_review │ ◄───────────────────────────────┘
-       └─────┬─────┘
-             │ [DoD Onayı: xUnit Testleri Yeşil + 0 Warning + Security Onayı]
-             ▼
-      ┌───────────┐
-      │ completed │ ──► (Sıradaki pending görevi tetikle)
-      └───────────┘
+  ┌──► │ in_review │ ◄───────────────────────────────┘
+  │    └─────┬─────┘
+  │          ├──────(QA / Security Reddi: revizyon)──► ┌───────────────────┐
+  │          │                                         │ changes_requested │
+  │          │                                         └─────────┬─────────┘
+  │          │                                                   │ (Revizyon bitti)
+  │          │ ◄─────────────────────────────────────────────────┘
+  │          │
+  │          │ [DoD Onayı: xUnit Testleri Yeşil + 0 Warning + Security Onayı]
+  │          ▼
+  │    ┌───────────┐
+  └─── │ completed │ ──► (Sıradaki pending görevi tetikle)
+       └───────────┘
 ```
 
 ### 🔴 KESİN KURAL: Work-in-Progress (WIP) Limiti = 1
-- Squad içinde aynı anda **yalnızca 1 görev `in_progress` olabilir**.
+- Squad içinde aynı anda **yalnızca 1 görev `in_progress` veya `changes_requested` olabilir**.
 - Bir görev `completed` olmadan veya resmi olarak `blocked` durumuna çekilip gerekçesi yazılmadan asla başka bir göreve başlanamaz.
 - *Gerekçe:* Çoklu görev (multitasking) bağlam değiştirme (context switching) maliyetini katlar, hataları ve teslimat süresini artırır.
 
@@ -54,28 +60,30 @@ Squad'ın tüm iş akışı tek bir merkezi kuyruk dosyası olan [`tasks.json`](
 ## 🚪 3. DoR (Definition of Ready) ve DoD (Definition of Done) Kapıları
 
 ### Giriş Kapısı: Definition of Ready (DoR)
-Bir görevin durumu `pending`'den `in_progress`'e çekilmeden önce şu 3 şartın **eksiksiz tamamlandığı** PM tarafından doğrulanır:
+Bir görevin durumu `pending`'den `in_progress`'e çekilmeden önce şu şartların **eksiksiz tamamlandığı** PM tarafından doğrulanır:
 1. **İş Analisti:** INVEST uyumlu kullanıcı hikayesi ve 4 kademeli Gherkin kabul kriterleri (`Happy`, `Validation`, `Conflict`, `Security`) hazırlandı mı?
-2. **Sistem Mimarı:** Domain Entity, `ViewModel` sözleşmesi ve `Result` desenli servis arayüzü (`IService`) çizildi mi?
+2. **Sistem Mimarı:** Domain Entity, `ViewModel` sözleşmesi, uygulanacak **Kurumsal Tasarım Kalıpları (`designPatternsUsed`)** ve `Result` desenli servis arayüzü (`IService`) çizildi mi?
 3. **UI/UX Tasarımcısı:** Bootstrap 5.3 görsel hiyerarşisi, 5 kademeli bileşen durum matrisi ve form UX şartnamesi hazırlandı mı?
-*Bu 3 belgeden biri dahi eksikse geliştirme başlatılamaz!*
+*Bu şartlardan biri dahi eksikse geliştirme başlatılamaz!*
 
 ### Çıkış Kapısı: Definition of Done (DoD)
-Bir görevin durumu `in_review`'dan `completed`'a çekilmeden önce şu 5 şartın sağlandığı onaylanır:
+Bir görevin durumu `in_review`'dan `completed`'a çekilmeden önce şu şartların sağlandığı onaylanır:
 1. **Gereksinim Karşılama:** Analistin tüm Gherkin kabul kriterleri çalışır durumda mı?
 2. **Derleme Bütünlüğü:** `dotnet build` çalıştırıldığında sıfır hata ve sıfır sarı uyarı (`warning`) ile başarıyla derleniyor mu?
 3. **Otomatik Testler:** xUnit birim testleri ve `WebApplicationFactory` entegrasyon testleri %100 yeşil mi?
-4. **Güvenlik ve Kalite:** Security Reviewer OWASP ASVS, CSRF/XSS ve kod kokusu denetimini imzaladı mı?
-5. **Kullanıcı Bilgilendirmesi:** Görevin tamamlandığı ve nelerin üretildiği kullanıcıya açıkça raporlandı mı?
+4. **Tasarım Kalıpları & Mimari:** Kararlaştırılan Tasarım Kalıpları kod tabanına temiz kod ilkeleriyle işlendi mi?
+5. **Güvenlik ve Kalite:** Security Reviewer OWASP ASVS, CSRF/XSS ve SonarAnalyzer denetimini imzaladı mı?
+6. **Kullanıcı Bilgilendirmesi:** Görevin tamamlandığı ve nelerin üretildiği kullanıcıya açıkça raporlandı mı?
 
 ---
 
 ## 📋 4. Standart `tasks.json` Görev Şeması
 
-Her görev aşağıdaki standart JSON formatında kuyruğa yazılır:
+Her görev aşağıdaki standart JSON formatında (`tasks.schema.json` doğrulamasından geçecek şekilde) kuyruğa yazılır:
 
 ```json
 {
+  "$schema": "./tasks.schema.json",
   "id": "TASK-04",
   "title": "Kredi Sistemi ve İki Aşamalı Rezervasyon Defteri",
   "description": "Kullanıcıların AI sorguları öncesinde kredilerinin rezerve edilmesi ve sorgu bitiminde kesinleştirilmesi.",
@@ -83,6 +91,7 @@ Her görev aşağıdaki standart JSON formatında kuyruğa yazılır:
   "priority": "high",
   "dependencies": ["TASK-03"],
   "assignedSquad": {
+    "orchestrator": "project-manager",
     "analyst": "business-analyst",
     "architect": "solution-architect",
     "ux": "uiux-designer",
@@ -90,7 +99,18 @@ Her görev aşağıdaki standart JSON formatında kuyruğa yazılır:
     "reviewers": ["qa-tester", "security-reviewer"]
   },
   "dorMet": false,
-  "dodMet": false
+  "dodMet": false,
+  "rejectionCount": 0,
+  "reviewNotes": [],
+  "artifacts": {
+    "userStory": "",
+    "acceptanceCriteria": [],
+    "architectureDecisions": [],
+    "designPatternsUsed": ["Strategy Pattern", "Decorator Pattern"],
+    "uiDesignTokens": [],
+    "testsWritten": [],
+    "securityAuditPassed": false
+  }
 }
 ```
 
@@ -104,18 +124,18 @@ Her görev aşağıdaki standart JSON formatında kuyruğa yazılır:
   └── Bağımlılıkları tamamlanmış en yüksek öncelikli 'pending' görevi belirle.
 
 [Adım 2: DoR Denetimini İşlet]
-  ├── Analist, Mimar ve UX şartnamelerinin eksiksiz olduğunu teyit et.
+  ├── Analist, Mimar (Tasarım Kalıpları dahil) ve UX şartnamelerini teyit et.
   └── Hepsi tamsa görevi 'in_progress' durumuna al (WIP = 1).
 
 [Adım 3: Geliştirme Akışını Koordine Et]
-  ├── Backend geliştiricisini servis katmanı ve controller için devreye sok.
+  ├── Backend geliştiricisini servis katmanı, controller ve tasarım kalıpları için devreye sok.
   ├── Razor uzmanını UI/UX şartnamesine göre .cshtml kodlaması için yönlendir.
   └── Geliştirme bittiğinde durumu 'in_review' yap.
 
 [Adım 4: Kalite ve Güvenlik Kapısını Tetikle]
   ├── QA uzmanından xUnit ve son kullanıcı test raporunu al.
-  ├── Security Reviewer'dan OWASP ve kod kalitesi imzasını al.
-  └── Herhangi bir red varsa görevi geliştiriciye revizyona gönder.
+  ├── Security Reviewer'dan OWASP, SonarAnalyzer ve kod kalitesi imzasını al.
+  └── Herhangi bir red varsa görevi 'changes_requested' yap, rejectionCount'u artır ve geliştiriciye ilet.
 
 [Adım 5: Görevi Kapat ve Sıradakini Başlat]
   ├── DoD maddeleri tamsa görevi 'completed' yap.
@@ -128,13 +148,13 @@ Her görev aşağıdaki standart JSON formatında kuyruğa yazılır:
 
 | # | Kontrol Maddesi | Beklenen Standart | İhlal Durumunda |
 | :--- | :--- | :--- | :--- |
-| **1** | **WIP Limiti = 1** | Sistemde aynı anda sadece tek bir görev `in_progress` olabilir. | 2. iş açılmışsa ➔ RED & Durdur |
-| **2** | **DoR Kontrolü** | Analiz, Mimari veya UX olmadan kodlama başlatılmış mı? | Başlatılmışsa ➔ İşi iptal et |
+| **1** | **WIP Limiti = 1** | Sistemde aynı anda sadece tek bir görev `in_progress` veya `changes_requested` olabilir. | 2. iş açılmışsa ➔ RED & Durdur |
+| **2** | **DoR Kontrolü** | Analiz, Mimari, Tasarım Kalıbı veya UX olmadan kodlama başlatılmış mı? | Başlatılmışsa ➔ İşi iptal et |
 | **3** | **Görev Atomikliği** | Görev çok büyük veya birden fazla karmaşık özellik mi içeriyor? | Büyükse ➔ Alt tasklara böl |
 | **4** | **Bloke Yönetimi** | Rollerden biri tıkandığında engel raporlanıp çözüme kavuşturuldu mu? | Engel derhal eskale edilmeli |
 | **5** | **Test Zorunluluğu** | Görevde otomatik xUnit birim/entegrasyon testi yazılmış mı? | Test yoksa ➔ DoD verilemez |
 | **6** | **0 Compiler Warning** | `dotnet build` çıktısında sarı uyarı var mı? | Varsa ➔ İşi geri gönder |
 | **7** | **Siber Güvenlik İmzası**| Security Reviewer CSRF, XSS, IDOR ve bellek onayını verdi mi? | Onaysızsa ➔ Kapatılamaz |
-| **8** | **İzlenebilirlik** | `tasks.json` dosyasındaki durum anlık gerçekliği yansıtıyor mu? | Uyuşmuyorsa ➔ Senkronize et |
+| **8** | **İzlenebilirlik** | `tasks.json` dosyasındaki durum ve schema anlık gerçekliği yansıtıyor mu? | Uyuşmuyorsa ➔ Senkronize et |
 | **9** | **Kullanıcı Şeffaflığı** | Kritik kararlarda ve görev bitiminde kullanıcıya şeffaf rapor sunuldu mu?| Sunulmadıysa ➔ Rapor hazırla |
 | **10**| **Kesintisiz Döngü** | Görev kapandığında sıradaki `pending` görev belirlendi mi? | Kuyruk akışı sürdürülmeli |

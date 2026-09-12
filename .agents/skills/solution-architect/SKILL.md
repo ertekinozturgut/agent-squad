@@ -1,11 +1,11 @@
 ---
 name: solution-architect
-description: Clean Architecture, Domain-Driven Design (DDD) ve SOLID prensiplerine uygun mimari kontratları (Entity, ViewModel, Interface, Result Pattern) tasarlar ve mimari uygunluğu denetler.
+description: Clean Architecture, Domain-Driven Design (DDD), SOLID ve Kurumsal Tasarım Kalıplarına (GoF & Enterprise Design Patterns) uygun mimari kontratları (Entity, ViewModel, Interface, Strategy, Adapter, Result Pattern) tasarlar ve mimari uygunluğu denetler.
 ---
 
-# Çözüm Mimarı Uzmanlık Rehberi (Clean Architecture & DDD Systems Edition)
+# Çözüm Mimarı Uzmanlık Rehberi (Clean Architecture, DDD & Design Patterns Edition)
 
-Bu rehber, projenin mimari bütünlüğünü korumak, katman sınırlarını çizmek, zengin domain modelleri ve arayüz sözleşmeleri (contracts) tasarlamak için izlenecek prosedürleri içerir.
+Bu rehber, projenin mimari bütünlüğünü korumak, katman sınırlarını çizmek, zengin domain modelleri, tasarım kalıpları (Design Patterns) ve arayüz sözleşmeleri (contracts) tasarlamak için izlenecek prosedürleri içerir.
 
 ---
 
@@ -13,9 +13,10 @@ Bu rehber, projenin mimari bütünlüğünü korumak, katman sınırlarını çi
 
 1. **Clean Architecture: A Craftsman's Guide to Software Structure and Design** (Robert C. Martin - Uncle Bob)
 2. **Domain-Driven Design: Tackling Complexity in the Heart of Software** (Eric Evans)
-3. **Implementing Domain-Driven Design (IDDD)** (Vaughn Vernon)
-4. **Patterns of Enterprise Application Architecture (PoEAA)** (Martin Fowler)
-5. **Microsoft Architecture Guides (eShopOnWeb Reference Architecture)**
+3. **Design Patterns: Elements of Reusable Object-Oriented Software** (Gang of Four - GoF)
+4. **Implementing Domain-Driven Design (IDDD)** (Vaughn Vernon)
+5. **Patterns of Enterprise Application Architecture (PoEAA)** (Martin Fowler)
+6. **Microsoft Architecture Guides (eShopOnWeb Reference Architecture)**
 
 ---
 
@@ -32,14 +33,14 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
                             ▼
        ┌─────────────────────────────────────────┐
        │          Infrastructure Katmanı         │
-       │   EF Core, DbContext, Migrations, APIs  │
+       │   EF Core, DbContext, Adapters, APIs    │
        └────────────────────┬────────────────────┘
                             │ (Bağımlıdır)
                             ▼
        ┌─────────────────────────────────────────┐
        │              Core Katmanı               │
        │   Entities, Value Objects, Interfaces,  │
-       │   Result Pattern, Enums, Domain Events  │
+       │   Design Patterns, Specifications, Enums│
        └─────────────────────────────────────────┘
         ▲ (SIFIR DIŞ BAĞIMLILIK - Tamamen Saf C#)
 ```
@@ -47,10 +48,10 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
 ### Katman Sınırları ve Kırmızı Çizgiler:
 1. **Core Katmanı (Domain & Application Contracts):**
    - **KESİN KURAL:** `Core` projesi asla `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore.Mvc` veya üçüncü taraf altyapı paketlerine referans içeremez. Yalnızca saf .NET ve temel C# kütüphaneleri bulunabilir.
-   - Domain Entity'leri, Value Object'ler, servis arayüzleri (`IUserService`), ortak tipler (`Result<T>`) burada yaşar.
+   - Domain Entity'leri, Value Object'ler, servis arayüzleri (`IUserService`), ortak tipler (`Result<T>`), Strategy arayüzleri ve Specification kalıpları burada yaşar.
 2. **Infrastructure Katmanı:**
-   - `Core` arayüzlerini somutlaştırır (`UserService : IUserService`, `AppDbContext`).
-   - Veritabanı konfigürasyonları (Fluent API) burada yer alır.
+   - `Core` arayüzlerini somutlaştırır (`UserService : IUserService`, `AppDbContext`, harici servis Adapter'ları).
+   - Veritabanı konfigürasyonları (Fluent API) ve Decorator sınıfları burada yer alır.
 3. **Web Katmanı:**
    - Presentation katmanıdır. Sadece `ViewModel` ve `Controller` mantığını yönetir. Asla SQL veya ORM lojiği içermez.
 
@@ -65,7 +66,7 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
   public class User
   {
       public Guid Id { get; set; }
-      public string FullName { get; set; } // Null veya anlamsız veri girilebilir!
+      public string FullName { get; set; }
       public string Email { get; set; }
       public bool IsActive { get; set; }
   }
@@ -73,7 +74,7 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
 * **İYİ (Rich Domain Model - ONAY):**
   ```csharp
   // İYİ: Alanlar private set ile korunur, durum değişiklikleri iş kuralları ile denetlenir.
-  namespace DotNet10WebApp.Core.Entities;
+  namespace MyApp.Core.Entities;
 
   public class User : BaseEntity
   {
@@ -110,7 +111,7 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
 ### B. Evrensel Result Deseni (Core/Common)
 * **Kural:** Katmanlar arası el sıkışmada hata kodları ve mesajları tipli olarak iletilir:
   ```csharp
-  namespace DotNet10WebApp.Core.Common;
+  namespace MyApp.Core.Common;
 
   public record Result
   {
@@ -133,7 +134,7 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
 ### C. Değer Nesneleri (Value Objects)
 * İki değer nesnesi kimlikleriyle (ID) değil, taşıdıkları değerlerin eşitliği ile karşılaştırılır (C# `record` veya `readonly record struct`):
   ```csharp
-  namespace DotNet10WebApp.Core.ValueObjects;
+  namespace MyApp.Core.ValueObjects;
 
   public readonly record struct Money(decimal Amount, string Currency)
   {
@@ -141,39 +142,51 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
   }
   ```
 
-### D. Servis Yaşam Döngüsü ve Captive Dependency Koruması
-* **Singleton:** Uygulama ömrü boyunca tek nesne (Sadece thread-safe stateless nesneler veya caching).
-* **Scoped:** Her HTTP isteği başına bir nesne (`DbContext`, Repository, Business Servisleri).
-* **Transient:** Her talep edildiğinde yeni nesne (Hafif hesaplayıcılar).
-* **KIRMIZI ÇİZGİ (Captive Dependency):** Bir `Singleton` servise asla `Scoped` servis (`DbContext` veya `IUserService`) doğrudan inject edilemez!
+---
+
+## 🏛️ 4. Kurumsal Tasarım Kalıpları Kataloğu ve Seçim Rehberi (Design Patterns Selection Guide)
+
+Çözüm Mimarı, DoR aşamasında her görev için aşağıdaki matrise göre hangi kalıbın kullanılacağını belirlemek ve `artifacts.designPatternsUsed` içine yazmakla yükümlüdür:
+
+| Tasarım Kalıbı | Kategori | Kullanılacağı Senaryo & Problem | Core / Infra Sözleşmesi |
+| :--- | :--- | :--- | :--- |
+| **Strategy Pattern** | Davranışsal | Değişen iş kuralları, çoklu indirim/fiyatlandırma hesaplamaları, farklı ödeme yöntemleri | Arayüz `Core/Interfaces` içinde (`IDiscountStrategy`), somut stratejiler `Core/Strategies` veya `Infrastructure` içinde tanımlanır. |
+| **Adapter Pattern** | Yapısal | Üçüncü parti kütüphaneler, SMS, E-Posta veya Ödeme API'leri (Stripe, Twilio vb.) | Domain hedef arayüzü `Core/Interfaces` içinde (`IPaymentGateway`), entegrasyon adaptörü `Infrastructure/Adapters` içinde yer alır. |
+| **Decorator Pattern** | Yapısal | Caching, Logging, Performans Sayacı, Retry veya Yetkilendirme gibi kesişen endişeler | Ana servis sınıfına dokunulmaz; aynı arayüzü uygulayan `CachedXService` veya `LoggingXService` ile DI katmanında sarmalanır. |
+| **Specification Pattern** | Davranışsal | Tekrar eden, birleştirilebilir veritabanı veya domain iş kuralı filtreleri | `ISpecification<T>` arayüzü `Core/Common` içinde, somut sorgu kuralları `Core/Specifications` içinde yaşar. |
+| **Factory / Builder** | Yaratımsal | Çok parametreli, birden fazla adımlı veya katı invariyantlara sahip nesnelerin inşası | Varlık içi `Static Factory Method` (`Order.Create(...)`) veya test/sorgu için `OrderBuilder` kullanılır. |
 
 ---
 
-## 📋 4. Adım Adım Mimari Tasarım Protokolü (SOP)
+## 📋 5. Adım Adım Mimari Tasarım Protokolü (SOP)
 
 ```text
 [Adım 1: Gereksinim Ayrıştırma]
   ├── Analistin Gherkin şartnamesini oku.
   └── Varlık (Entity), Değer Nesnesi (Value Object) ve Eylem (Command/Query) sınırlarını ayır.
 
-[Adım 2: Core Modellerini Tanımla]
+[Adım 2: Tasarım Kalıbı ve Sözleşme Seçimi]
+  ├── İş mantığındaki dallanmalar için Strategy, dış entegrasyon için Adapter belirle.
+  └── 'artifacts.designPatternsUsed' alanına seçilen kalıpları kaydet.
+
+[Adım 3: Core Modellerini Tanımla]
   ├── 'Core/Entities/' altında Zengin Domain Entity'sini oluştur.
   ├── Gerekli invariyant kontrollerini (ThrowHelpers) entity metotlarına göm.
   └── Dış dünya ile el sıkışılacak DTO/Command record'larını oluştur.
 
-[Adım 3: Arayüz (Interface) Sözleşmesini Çiz]
-  ├── 'Core/Interfaces/' altında 'IService' arayüzünü oluştur.
+[Adım 4: Arayüz (Interface) Sözleşmesini Çiz]
+  ├── 'Core/Interfaces/' altında 'IService' ve 'IStrategy' arayüzlerini oluştur.
   ├── Tüm metotları Result<T> dönecek ve CancellationToken alacak şekilde imzala.
   └── Presentation katmanı için 'Web/ViewModels/' altında ViewModel sözleşmesini hazırla.
 
-[Adım 4: Mimari Uygunluk Denetimi]
+[Adım 5: Mimari Uygunluk Denetimi]
   ├── Core projesinin referanslarını denetle (Üçüncü parti bağımlılık var mı?).
   └── ViewModel ile Entity arasında doğrudan sızıntı var mı kontrol et.
 ```
 
 ---
 
-## 🔍 5. Çözüm Mimarının 10 Maddelik Uygunluk Kapısı
+## 🔍 6. Çözüm Mimarının 10 Maddelik Uygunluk Kapısı
 
 | # | Kontrol Kriteri | Beklenen Standart | İhlal Durumunda |
 | :--- | :--- | :--- | :--- |
@@ -181,9 +194,9 @@ Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule)
 | **2** | **Anemik Model Yasağı** | Domain Entity'lerinde kontrolsüz public setter bulunamaz. | Varsa ➔ Private set ve metot yap |
 | **3** | **Result Sözleşmesi** | Servis arayüzleri Exception yerine `Result` veya `Result<T>` dönmelidir. | Çıplak tip dönüyorsa ➔ RED |
 | **4** | **ViewModel İzolasyonu** | View katmanına asla Domain Entity gönderilemez; `ViewModel` zorunludur. | Entity varsa ➔ RED |
-| **5** | **DIP Kuralı** | Controller'lar somut sınıflara değil, daima `Core` arayüzlerine (`IUserService`) bağımlı olmalıdır. | Somut sınıf varsa ➔ RED |
-| **6** | **CancellationToken** | Arayüzlerdeki tüm asenkron metotlar `CancellationToken ct = default` parametresi almalıdır. | Eksikse ➔ Ekle |
-| **7** | **Captive Dependency** | Singleton sınıflara Scoped nesne inject edilemez. | Varsa ➔ Yaşam döngüsünü düzelt |
-| **8** | **Kayıt Tarihçesi** | Tüm entity'ler `BaseEntity`'den türemeli ve `CreatedAt`, `ModifiedAt` yönetilmelidir. | Türemiyorsa ➔ RED |
-| **9** | **0 Compiler Warning** | Mimari şablonlar sıfır uyarı ile derlenmelidir. | Uyarı varsa ➔ RED |
-| **10**| **İşlem Bütünlüğü** | Çoklu tablo güncellemelerinde Transaction veya UnitOfWork stratejisi açıkça çizilmelidir. | Belirsizse ➔ Şartnameye ekle |
+| **5** | **Tasarım Kalıpları** | Dallanmalarda Strategy, dış API'de Adapter, kesişen işlerde Decorator şartnameye işlendi mi? | Belirtilmemişse ➔ RED |
+| **6** | **DIP Kuralı** | Controller'lar somut sınıflara değil, daima `Core` arayüzlerine (`IUserService`) bağımlı olmalıdır. | Somut sınıf varsa ➔ RED |
+| **7** | **CancellationToken** | Arayüzlerdeki tüm asenkron metotlar `CancellationToken ct = default` parametresi almalıdır. | Eksikse ➔ Ekle |
+| **8** | **Captive Dependency** | Singleton sınıflara Scoped nesne inject edilemez. | Varsa ➔ Yaşam döngüsünü düzelt |
+| **9** | **Kayıt Tarihçesi** | Tüm entity'ler `BaseEntity`'den türemeli ve `CreatedAt`, `ModifiedAt` yönetilmelidir. | Türemiyorsa ➔ RED |
+| **10**| **0 Compiler Warning** | Mimari şablonlar sıfır uyarı ile derlenmelidir. | Uyarı varsa ➔ RED |

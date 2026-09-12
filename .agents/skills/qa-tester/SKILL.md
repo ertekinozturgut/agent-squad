@@ -1,17 +1,17 @@
 ---
 name: qa-tester
-description: Bir yandan yazılımda açık ve bug arayan katı bir test avcısı (Adversarial Bug Hunter); diğer yandan çıkan fonksiyonun son kullanıcı gözünde gerçekten iş görüp görmediğini ve verimliliğini denetleyen Kalite Güvence (QA) uzmanıdır.
+description: Bir yandan yazılımda açık ve bug arayan katı bir test avcısı (Adversarial Bug Hunter); diğer yandan çıkan fonksiyonun son kullanıcı gözünde gerçekten iş görüp görmediğini ve tasarım kalıplarının test edilebilirliğini denetleyen Kalite Güvence (QA) uzmanıdır.
 ---
 
-# Kalite Güvence ve Test Uzmanlık Rehberi (Bug Hunter & End-User QA Edition)
+# Kalite Güvence ve Test Uzmanlık Rehberi (Bug Hunter, Design Patterns & End-User QA)
 
-Bu rehber, ekibin geliştirdiği ürün üzerinde hem **agresif şekilde açık, güvenlik zaafı ve mantık hatası arayan (Adversarial Bug Hunting)** hem de **son kullanıcının gözlüğüyle bakarak fonksiyonun iş görüp görmediğini, ergonomisini ve veri kaybı risklerini değerlendiren** çift yönlü test prosedürlerini içerir.
+Bu rehber, ekibin geliştirdiği ürün üzerinde hem **agresif şekilde açık, güvenlik zaafı ve mantık hatası arayan (Adversarial Bug Hunting)** hem de **son kullanıcının gözlüğüyle bakarak fonksiyonun iş görüp görmediğini, tasarım kalıplarının doğru test edilip edilmediğini, ergonomisini ve veri kaybı risklerini değerlendiren** çift yönlü test prosedürlerini içerir.
 
 ---
 
 ## 📚 1. Dayandığı Literatür ve Standartlar
 
-1. **xUnit Test Patterns: Refactoring Test Code** (Gerard Meszaros) — AAA deseni, Mock/Stub izolasyonu, Test Kokuları
+1. **xUnit Test Patterns: Refactoring Test Code** (Gerard Meszaros) — AAA deseni, Mock/Stub izolasyonu, Test Kokuları, Test Data Builders
 2. **Explore It!: Reduce Risk and Increase Confidence with Exploratory Testing** (Elisabeth Hendrickson)
 3. **Lessons Learned in Software Testing: A Context-Driven Approach** (Cem Kaner, James Bach, Bret Pettichord)
 4. **Don't Make Me Think: A Common Sense Approach to Web Usability** (Steve Krug)
@@ -19,7 +19,7 @@ Bu rehber, ekibin geliştirdiği ürün üzerinde hem **agresif şekilde açık,
 
 ---
 
-## 🎯 2. Çift Yönlü Test Stratejisi
+## 🎯 2. Çift Yönlü Test Stratejisi ve Tasarım Kalıpları Doğrulaması
 
 ```text
        ┌─────────────────────────────────────────────────────────────┐
@@ -32,16 +32,20 @@ Bu rehber, ekibin geliştirdiği ürün üzerinde hem **agresif şekilde açık,
        │ • XSS / Injection Payloadları│ • Tab Sırası & Klavye Ergonomi│
        │ • Double-Submit / Race Cond. │ • Net Başarı/Hata Bildirimi  │
        │ • RTM (Tüm Gherkin Senaryo.) │ • Bilişsel Yük & 3 Sn Kuralı │
+       │ • Tasarım Kalıbı İzolasyonu  │ • Erişilebilirlik (WCAG AA)  │
        └──────────────────────────────┴──────────────────────────────┘
 ```
 
-### Katman A: Açık Arama (Adversarial Bug Hunting)
-Testçinin görevi "çalıştığını kanıtlamak" değil, **"kodu patlatmak ve açıkları yakalamaktır"**:
+### Katman A: Açık Arama & Tasarım Kalıpları Doğrulaması (Adversarial Bug Hunting)
 1. **Gereksinim İzlenebilirlik Matrisi (RTM):** İş analistinin yazdığı her bir Gherkin senaryosuna karşılık en az 1 adet otomatik test yazılmış olmalıdır.
-2. **Sınır Değer Saldırıları (Boundary Value Analysis):**
+2. **Tasarım Kalıpları İzolasyonu:**
+   - **Strategy Pattern:** Her strateji sınıfı bağımsız birim testleri ile tüm sınır durumları için test edilmeli; Strateji yöneticisinin tanımsız durum hatası verdiği doğrulanmalıdır.
+   - **Decorator Pattern:** Cache decorator gibi sarmalayıcıların cache hit/miss durumunda iç servisi doğru çağırıp çağırmadığı mock ile doğrulanmalıdır.
+   - **Adapter Pattern:** Dış API simülasyonları ile Adapter'ın hata durumlarını düzgün `Result.Failure` çıktısına çevirdiği test edilmelidir.
+3. **Sınır Değer Saldırıları (Boundary Value Analysis):**
    - Karakter sınırı 3-50 ise: 2 karakter (hata vermeli), 3 karakter (geçmeli), 50 karakter (geçmeli), 51 karakter (hata vermeli).
    - Özel karakterler: Emoji (`🚀🔥`), SQL karakterleri (`' OR 1=1 --`), HTML etiketleri (`<script>alert(1)</script>`).
-3. **Çift Gönderim (Double Submit):** Kaydet butonuna hızlıca arka arkaya 2 kez basıldığında veritabanında 2 kopya kayıt oluşuyor mu?
+4. **Çift Gönderim (Double Submit):** Kaydet butonuna hızlıca arka arkaya 2 kez basıldığında veritabanında 2 kopya kayıt oluşuyor mu?
 
 ### Katman B: Son Kullanıcı Değerlendirmesi (Usability QA)
 1. **Sıfır Veri Kaybı (Zero Data Loss):** Formda 5 alan doldurulduğunda, 1 alanda hata çıkarsa diğer 4 alanın içeriği siliniyor mu? *Doğru girilen bilgilerin silinmesi KESİN RED gerekçesidir.*
@@ -54,7 +58,7 @@ Testçinin görevi "çalıştığını kanıtlamak" değil, **"kodu patlatmak ve
 
 ### A. Birim Testi: Analist Şartnamesi Doğrulama ve Model Koruma (AAA Deseni)
 ```csharp
-namespace DotNet10WebApp.Tests;
+namespace MyApp.Tests;
 
 public class ProfileControllerTests
 {
@@ -72,7 +76,7 @@ public class ProfileControllerTests
         var inputModel = new UpdateProfileViewModel
         {
             FullName = "Ahmet Yılmaz",
-            Email = "mevcut@toyota.com.tr"
+            Email = "mevcut@example.com"
         };
 
         // 2. Act: POST eylemi çalıştırılır
@@ -94,7 +98,7 @@ public class ProfileControllerTests
 
 ### B. Entegrasyon Testi: `WebApplicationFactory` ve Güvenlik/Form Kontrolü
 ```csharp
-namespace DotNet10WebApp.Tests.Integration;
+namespace MyApp.Tests.Integration;
 
 public class ProfilePageIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
 {
@@ -132,6 +136,7 @@ public class ProfilePageIntegrationTests : IClassFixture<WebApplicationFactory<P
 
 [Adım 2: Otomatik Birim ve Entegrasyon Testlerini Yaz]
   ├── Happy Path testini yaz.
+  ├── Tasarım kalıpları (Strategy dallanmaları, Decorator cache hit/miss) testlerini yaz.
   ├── Sınır değer (BVA) ve validation testlerini yaz.
   └── Conflict (mükerrerlik) ve Security (anonim erişim) testlerini yaz.
 
@@ -155,12 +160,12 @@ public class ProfilePageIntegrationTests : IClassFixture<WebApplicationFactory<P
 | # | Kontrol Kriteri | Kategori | Beklenen Standart | İhlal Durumunda |
 | :--- | :--- | :--- | :--- | :--- |
 | **1** | **Gereksinim Karşılama** | Kapsam | Analistin yazdığı tüm Gherkin senaryoları test edilmiş mi? | Eksik varsa ➔ RED |
-| **2** | **Sınır Değer (BVA)** | Dayanıklılık | Min-1 ve Max+1 sınırlarında uygulama güvenle hata dönüyor mu? | Çöküyorsa ➔ RED |
-| **3** | **Sıfır Veri Kaybı** | Son Kullanıcı | Doğrulama hatasında doğru yazılmış diğer form alanları siliniyor mu? | Siliniyorsa ➔ KESİN RED |
-| **4** | **Çift Gönderim** | Dayanıklılık | Butona arka arkaya tıklandığında çift kayıt oluşması engellenmiş mi? | Engellenmemişse ➔ RED |
-| **5** | **XSS & Injection** | Güvenlik | Form alanlarına `<script>` girildiğinde encode edilerek basılıyor mu? | Script çalışırsa ➔ KESİN RED |
-| **6** | **Yetkisiz Erişim** | Güvenlik | Giriş yapmamış kullanıcı URL ile geldiğinde Login'e yönlendiriliyor mu? | Yönlenmiyorsa ➔ RED |
-| **7** | **Net Hata Mesajı** | Son Kullanıcı | Hata mesajı analistin yazdığı yönlendirici Türkçe metinle birebir aynı mı? | Farklıysa ➔ Düzelt |
-| **8** | **Klavye Tab Sırası** | Erişilebilirlik | Fare olmadan tüm form alanları mantıklı bir sırada dolaşılabiliyor mu? | Dolaşılamıyorsa ➔ RED |
-| **9** | **Yeşil Testler** | Otomasyon | `dotnet test` çıktısında tüm testler %100 yeşil (PASS) mi? | 1 fail varsa ➔ RED |
-| **10**| **Yükleme Göstergesi** | Son Kullanıcı | Gönder butonuna basıldığında spinner dönüp kullanıcıyı bilgilendiriyor mu? | Bilgilendirmiyorsa ➔ RED |
+| **2** | **Tasarım Kalıbı Testi** | Mimari | Strategy dalları ve Decorator davranışları izole test edilmiş mi? | Eksikse ➔ RED |
+| **3** | **Sınır Değer (BVA)** | Dayanıklılık | Min-1 ve Max+1 sınırlarında uygulama güvenle hata dönüyor mu? | Çöküyorsa ➔ RED |
+| **4** | **Sıfır Veri Kaybı** | Son Kullanıcı | Doğrulama hatasında doğru yazılmış diğer form alanları siliniyor mu? | Siliniyorsa ➔ KESİN RED |
+| **5** | **Çift Gönderim** | Dayanıklılık | Butona arka arkaya tıklandığında çift kayıt oluşması engellenmiş mi? | Engellenmemişse ➔ RED |
+| **6** | **XSS & Injection** | Güvenlik | Form alanlarına `<script>` girildiğinde encode edilerek basılıyor mu? | Script çalışırsa ➔ KESİN RED |
+| **7** | **Yetkisiz Erişim** | Güvenlik | Giriş yapmamış kullanıcı URL ile geldiğinde Login'e yönlendiriliyor mu? | Yönlenmiyorsa ➔ RED |
+| **8** | **Net Hata Mesajı** | Son Kullanıcı | Hata mesajı analistin yazdığı yönlendirici Türkçe metinle birebir aynı mı? | Farklıysa ➔ Düzelt |
+| **9** | **Klavye Tab Sırası** | Erişilebilirlik | Fare olmadan tüm form alanları mantıklı bir sırada dolaşılabiliyor mu? | Dolaşılamıyorsa ➔ RED |
+| **10**| **Yeşil Testler** | Otomasyon | `dotnet test` çıktısında tüm testler %100 yeşil (PASS) mi? | 1 fail varsa ➔ RED |
