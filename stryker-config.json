@@ -8,7 +8,7 @@
       "!**/Migrations/**",
       "!**/Dtos/**"
     ],
-    "solution": "Company.sln",
+    "solution": "agent-squad.sln",
     "test-projects": [
       "tests/**/*.Tests.csproj"
     ],

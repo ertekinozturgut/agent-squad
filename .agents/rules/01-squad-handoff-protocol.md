@@ -50,6 +50,10 @@ Her görev istisnasız aşağıdaki 5 aşamalı zinciri tamamlamak zorundadır:
                                     └────────────── (Red / Revizyon) ───────────────┘
 ```
 
+### Aşama 0: Ortam Başlatma ve Doğrulama Kapısı (Init Gate)
+- Yeni bir projede `.agents/` devreye alındığında, kök dizin araçları (`Directory.Build.props`, `BannedSymbols.txt`, `.opengrep/`, `tests/ArchitectureTests/`, `tasks.json`) eksikse **hiçbir geliştirme görevi başlatılamaz**.
+- Orkestratör derhal `.agents/INIT.md` prosedürünü işleterek (`bash .agents/init.sh`) kök araçları kurar ve `dotnet test` ile doğrular.
+
 ### Aşama 1: Kapsam & Analiz (PM ➔ İş Analisti)
 - **Girdi:** Ham kullanıcı isteği veya `tasks.json` görevi.
 - **Çıktı:** INVEST formatında Kullanıcı Hikayesi + Gherkin (`Given-When-Then`) kabul kriterleri + Hata senaryoları + PII / Veri Sınıflandırması.

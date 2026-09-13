@@ -127,21 +127,23 @@ Tüm denetim araçları doğrudan ilgili konfigürasyon dosyalarına bağlanmı�
 
 ---
 
-## 🚀 Projelerinizde Nasıl Kullanılır?
+## 🚀 Projelerinizde Nasıl Kullanılır? (Otomatik Başlatma)
 
-### 1. Dizin Yapısını ve Yapılandırmaları Kopyalayın
+### Yöntem A: Tek Prompt ile Ajan Üzerinden Otomatik Kurulum (Önerilen)
+`.agents/` klasörünü projenize kopyalayın ve Antigravity AI IDE'ye şu istemi verin:
+> *"Bu projede agent-squad'ı başlat. .agents/INIT.md yönergelerini izleyerek hedef çözüm ve projelere uygun kök konfigürasyonlarını, ArchUnitNET testlerini, Opengrep kurallarını ve tasks.json dosyasını otomatik oluştur ve doğrula."*
+
+Ajan tüm kök araçlarını (`Directory.Build.props`, `BannedSymbols.txt`, `.editorconfig`, `nuget.config`, `stryker-config.json`, `.opengrep/`, `tests/`) projenizin çözüm ve namespace adına göre otomatik kurar ve `dotnet test` ile doğrular.
+
+### Yöntem B: Tek Terminal Komutuyla Kurulum
+Doğrudan terminal üzerinden tek komutla tüm ortamı kurmak için:
 ```bash
-cp -r .agents/ tests/ .opengrep/ .codeql/ docs/ /path/to/your/project/
-cp Directory.Build.props BannedSymbols.txt .editorconfig nuget.config stryker-config.json /path/to/your/project/
+bash .agents/init.sh [NamespacePrefix]
 ```
 
-### 2. Görev Kuyruğunu Başlatın
-```bash
-cp tasks.template.json /path/to/your/project/tasks.json
-cp tasks.schema.json /path/to/your/project/tasks.schema.json
-```
+---
 
-### 3. Denetim Araçlarını Doğrudan Çalıştırın (Saf .NET)
+### Manuel Çalıştırma ve Denetim Komutları (Saf .NET)
 ```bash
 # 1. Derleme, Roslyn ve BannedApi (TimeProvider vb.) kontrolü:
 dotnet build
