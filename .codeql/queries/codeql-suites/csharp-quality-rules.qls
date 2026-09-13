@@ -1,0 +1,11 @@
+- description: Full C# Senior Quality, SonarQube and Design Patterns Suite
+- queries: .
+  from: company-security/csharp-quality-queries
+- include:
+    tags:
+      - design-patterns
+      - maintainability
+      - reliability
+      - security
+      - concurrency
+      - performance

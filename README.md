@@ -109,7 +109,7 @@ Tüm denetim araçları doğrudan ilgili konfigürasyon dosyalarına bağlanmı�
 |---|---|---|---|
 | **ArchUnitNET** | [`tests/ArchitectureTests/`](tests/ArchitectureTests/) | `dotnet test tests/ArchitectureTests/` | Katman sınırları, dikey dilim izolasyonu, endpoint yetki ve PII marker testleri (32 kural). |
 | **Opengrep** | [`.opengrep/rules.yaml`](.opengrep/rules.yaml) | `opengrep scan --config .opengrep/rules.yaml` | Sintaktik hijyen; .Result, async/await, HttpClient, lock, yapılandırılmış loglama (71 kural). |
-| **CodeQL** | [`.codeql/models/company-flow-model.yml`](.codeql/models/) | `codeql database analyze --model-packs .codeql/models/` | Derin veri akışı (taint tracking); SQLi, RCE, SSRF, path traversal, PII sızıntı takibi (19 kural). |
+| **CodeQL** | [`.codeql/queries/`](.codeql/README.md) & [`.codeql/models/`](.codeql/models/) | `codeql database analyze db .codeql/queries/codeql-suites/csharp-quality-rules.qls` | 35 özel kural (8 Design Patterns, 11 SonarQube Temiz Kod, 16 Senior Mühendislik kuralı) ve derin taint modelleri. |
 | **Stryker .NET** | [`stryker-config.json`](stryker-config.json) | `dotnet stryker --since:origin/main` | Mutasyon test kapısı; değişen dosyalarda 0 hayatta kalan mutant (R-TST-001) (3 kural). |
 | **Roslyn Analizörleri**| [`Directory.Build.props`](Directory.Build.props), [`BannedSymbols.txt`](BannedSymbols.txt), [`.editorconfig`](.editorconfig) | `dotnet build` | `BannedSymbols.txt` (TimeProvider), SonarAnalyzer, VSTHRD ve sıfır uyarı kuralı (22 kural). |
 | **Süreç Kapıları** | [`nuget.config`](nuget.config), [`.agents/contract.yaml`](.agents/contract.yaml), [docs/](docs/) | CI / PR Pipeline | Lockfile, SBOM, NuGet allowlist, ADR, ASPICE izlenebilirliği (28 kural). |
