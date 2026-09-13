@@ -1,202 +1,91 @@
 ---
 name: solution-architect
-description: Clean Architecture, Domain-Driven Design (DDD), SOLID ve Kurumsal Tasarım Kalıplarına (GoF & Enterprise Design Patterns) uygun mimari kontratları (Entity, ViewModel, Interface, Strategy, Adapter, Result Pattern) tasarlar ve mimari uygunluğu denetler.
+description: Clean Architecture, Domain-Driven Design (DDD), SOLID, contract.yaml sözleşmesi, ArchUnitNET testleri ve Kurumsal Tasarım Kalıplarına (23 GoF & Enterprise) uygun mimari kontratları tasarlar.
 ---
 
-# Çözüm Mimarı Uzmanlık Rehberi (Clean Architecture, DDD & Design Patterns Edition)
+# Çözüm Mimarı Uzmanlık Rehberi (UDAP v2 & Clean Architecture Contract Edition)
 
-Bu rehber, projenin mimari bütünlüğünü korumak, katman sınırlarını çizmek, zengin domain modelleri, tasarım kalıpları (Design Patterns) ve arayüz sözleşmeleri (contracts) tasarlamak için izlenecek prosedürleri içerir.
-
----
-
-## 📚 1. Dayandığı Literatür ve Standartlar
-
-1. **Clean Architecture: A Craftsman's Guide to Software Structure and Design** (Robert C. Martin - Uncle Bob)
-2. **Domain-Driven Design: Tackling Complexity in the Heart of Software** (Eric Evans)
-3. **Design Patterns: Elements of Reusable Object-Oriented Software** (Gang of Four - GoF)
-4. **Implementing Domain-Driven Design (IDDD)** (Vaughn Vernon)
-5. **Patterns of Enterprise Application Architecture (PoEAA)** (Martin Fowler)
-6. **Microsoft Architecture Guides (eShopOnWeb Reference Architecture)**
+Bu rehber, projenin mimari bütünlüğünü korumak, `.agents/contract.yaml` sözleşmesini yönetmek, katman sınırlarını çizmek, zengin domain modelleri, tasarım kalıpları (Design Patterns) ve ArchUnitNET ile doğrulanabilir mimari sözleşmeler tasarlamak için izlenecek prosedürleri içerir.
 
 ---
 
-## 🏗️ 2. Clean Architecture Katman Değişmezleri (Invariants)
+## 📚 1. Dayandığı Standartlar ve Literatür
 
-Sistem 3 temel katmandan oluşur ve bağımlılık kuralı (The Dependency Rule) daima **içe doğru (Core'a)** işaret eder:
+1. **Clean Architecture: A Craftsman's Guide to Software Structure and Design** (Robert C. Martin - Uncle Bob).
+2. **Domain-Driven Design: Tackling Complexity in the Heart of Software** (Eric Evans).
+3. **Design Patterns: Elements of Reusable Object-Oriented Software** (Gang of Four - GoF).
+4. **Patterns of Enterprise Application Architecture (PoEAA)** (Martin Fowler).
+5. **ISO/IEC 25010:2023:** Modularity, Maintainability, Replaceability, Analysability.
+6. **Automotive SPICE v4.0 (SWE.2 Software Architectural Design) & ADR:** Mimari Karar Kayıtları (R-AUT-004).
+7. **UDAP v2 Mimari ve Modülerlik Kuralları (R-ARCH-001..010, R-MOD-001..004).**
+
+---
+
+## 🏗️ 2. Katman Mimarisi ve Sözleşme Bağımlılıkları (`contract.yaml`)
+
+Sistem 4 temel katmandan oluşur ve bağımlılık kuralı daima **içe doğru (Domain'e)** işaret eder:
 
 ```text
-       ┌─────────────────────────────────────────┐
-       │             Web (UI Layer)              │
-       │   Controllers, Views, ViewModels, Tags  │
-       └────────────────────┬────────────────────┘
-                            │ (Bağımlıdır)
-                            ▼
-       ┌─────────────────────────────────────────┐
-       │          Infrastructure Katmanı         │
-       │   EF Core, DbContext, Adapters, APIs    │
-       └────────────────────┬────────────────────┘
-                            │ (Bağımlıdır)
-                            ▼
-       ┌─────────────────────────────────────────┐
-       │              Core Katmanı               │
-       │   Entities, Value Objects, Interfaces,  │
-       │   Design Patterns, Specifications, Enums│
+┌─────────────────────────────────────────┐
+│               Api (L1)                  │
+│       Controllers, Endpoints, Tags      │
+└────────────────────┬────────────────────┘
+                     │ (may_depend_on: [application, domain])
+                     ▼
+┌─────────────────────────────────────────┐
+│            Application (L2)             │
+│    Use Cases, Commands, Handlers, DTOs  │
+└────────────────────┬────────────────────┘
+                     │ (may_depend_on: [domain])
+                     ▼
+┌─────────────────────────────────────────┐
+│               Domain (L3)               │
+│   Entities, Value Objects, Pure Enums   │
+└─────────────────────────────────────────┘
+ ▲                   ▲
+ │                   │ (may_depend_on: [domain, application])
+ │                   ▼
+ │     ┌─────────────────────────────────────────┐
+ └─────┤          Infrastructure (L2)            │
+       │   EF Core, DbContext, Polly, Outbox     │
        └─────────────────────────────────────────┘
-        ▲ (SIFIR DIŞ BAĞIMLILIK - Tamamen Saf C#)
 ```
 
-### Katman Sınırları ve Kırmızı Çizgiler:
-1. **Core Katmanı (Domain & Application Contracts):**
-   - **KESİN KURAL:** `Core` projesi asla `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore.Mvc` veya üçüncü taraf altyapı paketlerine referans içeremez. Yalnızca saf .NET ve temel C# kütüphaneleri bulunabilir.
-   - Domain Entity'leri, Value Object'ler, servis arayüzleri (`IUserService`), ortak tipler (`Result<T>`), Strategy arayüzleri ve Specification kalıpları burada yaşar.
-2. **Infrastructure Katmanı:**
-   - `Core` arayüzlerini somutlaştırır (`UserService : IUserService`, `AppDbContext`, harici servis Adapter'ları).
-   - Veritabanı konfigürasyonları (Fluent API) ve Decorator sınıfları burada yer alır.
-3. **Web Katmanı:**
-   - Presentation katmanıdır. Sadece `ViewModel` ve `Controller` mantığını yönetir. Asla SQL veya ORM lojiği içermez.
+### Katman Sorumluluk Sınırları ve Kırmızı Çizgiler:
+1. **Domain Katmanı (R-ARCH-001, R-ARCH-003, R-NET-054):**
+   - **KESİN KURAL:** Domain asla `Microsoft.EntityFrameworkCore`, `Microsoft.AspNetCore`, `System.Data`, `System.IO`, `System.Net.Http` veya `Azure.Messaging` paketlerine bağımlı olamaz. Tamamen saf C# olmalıdır.
+   - Zamana bağlı işlemlerde `DateTime.Now` yasaktır; `TimeProvider` soyutlaması kullanılır (R-NET-050).
+   - `Guid.NewGuid()` çağrısı enjekte edilir (R-NET-052).
+2. **Application Katmanı (R-ARCH-002):**
+   - Yalnızca Domain katmanına bağımlı olabilir. Altyapı somutlamalarını tanımaz; soyut servis arayüzleri ve MediatR/CQRS işleyicileri barındırır.
+3. **Infrastructure Katmanı (R-ARCH-004):**
+   - Application ve Domain arayüzlerini somutlaştırır (`AppDbContext`, Polly HTTP Clients, Transactional Outbox Worker).
+4. **Api Katmanı (R-ARCH-004, R-ARCH-005):**
+   - Infrastructure sınıflarına doğrudan erişemez. Domain entity tipleri API imzalarında asla görünemez (Mass-assignment koruması CWE-915).
 
 ---
 
-## 🧩 3. Mimari Tasarım Örüntüleri ve Somut Örnekler
+## 🧩 3. Modüler Monolit ve Dikey Dilim İzolasyonu (R-MOD)
 
-### A. Zengin Domain Modeli (Rich Domain Model) vs Anemik Model
-* **KÖTÜ (Anemic Domain Model - KESİN RED):**
-  ```csharp
-  // KÖTÜ: Tüm alanlar public setter'a sahip. Herhangi bir katman veriyi tutarsız hale getirebilir!
-  public class User
-  {
-      public Guid Id { get; set; }
-      public string FullName { get; set; }
-      public string Email { get; set; }
-      public bool IsActive { get; set; }
-  }
-  ```
-* **İYİ (Rich Domain Model - ONAY):**
-  ```csharp
-  // İYİ: Alanlar private set ile korunur, durum değişiklikleri iş kuralları ile denetlenir.
-  namespace MyApp.Core.Entities;
-
-  public class User : BaseEntity
-  {
-      public string FullName { get; private set; } = string.Empty;
-      public string Email { get; private set; } = string.Empty;
-      public bool IsActive { get; private set; } = true;
-
-      // EF Core için private parameterless constructor
-      private User() { }
-
-      public User(string fullName, string email)
-      {
-          UpdateProfile(fullName, email);
-      }
-
-      public void UpdateProfile(string fullName, string email)
-      {
-          ArgumentException.ThrowIfNullOrWhiteSpace(fullName, nameof(fullName));
-          ArgumentException.ThrowIfNullOrWhiteSpace(email, nameof(email));
-
-          FullName = fullName.Trim();
-          Email = email.Trim().ToLowerInvariant();
-          SetModified();
-      }
-
-      public void Deactivate()
-      {
-          IsActive = false;
-          SetModified();
-      }
-  }
-  ```
-
-### B. Evrensel Result Deseni (Core/Common)
-* **Kural:** Katmanlar arası el sıkışmada hata kodları ve mesajları tipli olarak iletilir:
-  ```csharp
-  namespace MyApp.Core.Common;
-
-  public record Result
-  {
-      public bool IsSuccess { get; init; }
-      public string? ErrorMessage { get; init; }
-
-      public static Result Success() => new() { IsSuccess = true };
-      public static Result Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
-  }
-
-  public record Result<T> : Result
-  {
-      public T? Value { get; init; }
-
-      public static Result<T> Success(T value) => new() { IsSuccess = true, Value = value };
-      public new static Result<T> Failure(string message) => new() { IsSuccess = false, ErrorMessage = message };
-  }
-  ```
-
-### C. Değer Nesneleri (Value Objects)
-* İki değer nesnesi kimlikleriyle (ID) değil, taşıdıkları değerlerin eşitliği ile karşılaştırılır (C# `record` veya `readonly record struct`):
-  ```csharp
-  namespace MyApp.Core.ValueObjects;
-
-  public readonly record struct Money(decimal Amount, string Currency)
-  {
-      public static Money Zero(string currency = "TRY") => new(0m, currency);
-  }
-  ```
+1. **Feature Bağımsızlığı (R-MOD-001):** `Orders`, `Customers`, `Vehicles`, `Campaigns` dikey dilimleri birbirine doğrudan bağımlı olamaz.
+2. **Ortak Kod (R-MOD-003):** Paylaşılan kodlar yalnızca `Company.SharedKernel` altında toplanabilir.
+3. **SharedKernel Saflığı (R-MOD-004):** `SharedKernel` hiçbir dikey feature paketine bağımlı olamaz.
 
 ---
 
-## 🏛️ 4. Kurumsal Tasarım Kalıpları Kataloğu ve Seçim Rehberi (Design Patterns Selection Guide)
+## 🏛️ 4. Kurumsal Dayanıklılık ve Entegrasyon Tasarımı
 
-Çözüm Mimarı, DoR aşamasında her görev için aşağıdaki matrise göre hangi kalıbın kullanılacağını belirlemek ve `artifacts.designPatternsUsed` içine yazmakla yükümlüdür:
-
-| Tasarım Kalıbı | Kategori | Kullanılacağı Senaryo & Problem | Core / Infra Sözleşmesi |
-| :--- | :--- | :--- | :--- |
-| **Strategy Pattern** | Davranışsal | Değişen iş kuralları, çoklu indirim/fiyatlandırma hesaplamaları, farklı ödeme yöntemleri | Arayüz `Core/Interfaces` içinde (`IDiscountStrategy`), somut stratejiler `Core/Strategies` veya `Infrastructure` içinde tanımlanır. |
-| **Adapter Pattern** | Yapısal | Üçüncü parti kütüphaneler, SMS, E-Posta veya Ödeme API'leri (Stripe, Twilio vb.) | Domain hedef arayüzü `Core/Interfaces` içinde (`IPaymentGateway`), entegrasyon adaptörü `Infrastructure/Adapters` içinde yer alır. |
-| **Decorator Pattern** | Yapısal | Caching, Logging, Performans Sayacı, Retry veya Yetkilendirme gibi kesişen endişeler | Ana servis sınıfına dokunulmaz; aynı arayüzü uygulayan `CachedXService` veya `LoggingXService` ile DI katmanında sarmalanır. |
-| **Specification Pattern** | Davranışsal | Tekrar eden, birleştirilebilir veritabanı veya domain iş kuralı filtreleri | `ISpecification<T>` arayüzü `Core/Common` içinde, somut sorgu kuralları `Core/Specifications` içinde yaşar. |
-| **Factory / Builder** | Yaratımsal | Çok parametreli, birden fazla adımlı veya katı invariyantlara sahip nesnelerin inşası | Varlık içi `Static Factory Method` (`Order.Create(...)`) veya test/sorgu için `OrderBuilder` kullanılır. |
+1. **Transactional Outbox Pattern (R-NET-056):** Veritabanı transaction'ı içinde harici Service Bus veya HTTP çağrısı yapılamaz. Olaylar önce `OutboxMessages` tablosuna yazılır ve bağımsız worker tarafından asenkron yayınlanır.
+2. **Resilience & Circuit Breaker (R-NET-042, R-NET-046, R-NET-048):** Dış servislere giden çağrılar Polly pipeline ile (Exponential backoff + jitter + Circuit Breaker) korunmalıdır.
+3. **Idempotency & Correlation (R-NET-040, R-NET-041):** Tüm mesaj ve dış isteklerde `X-Correlation-Id` başlığı ve idempotency anahtarı tasarlanmalıdır.
 
 ---
 
-## 📋 5. Adım Adım Mimari Tasarım Protokolü (SOP)
+## 📋 5. Çözüm Mimarının DoR Tasarım Kontrol Listesi
 
-```text
-[Adım 1: Gereksinim Ayrıştırma]
-  ├── Analistin Gherkin şartnamesini oku.
-  └── Varlık (Entity), Değer Nesnesi (Value Object) ve Eylem (Command/Query) sınırlarını ayır.
-
-[Adım 2: Tasarım Kalıbı ve Sözleşme Seçimi]
-  ├── İş mantığındaki dallanmalar için Strategy, dış entegrasyon için Adapter belirle.
-  └── 'artifacts.designPatternsUsed' alanına seçilen kalıpları kaydet.
-
-[Adım 3: Core Modellerini Tanımla]
-  ├── 'Core/Entities/' altında Zengin Domain Entity'sini oluştur.
-  ├── Gerekli invariyant kontrollerini (ThrowHelpers) entity metotlarına göm.
-  └── Dış dünya ile el sıkışılacak DTO/Command record'larını oluştur.
-
-[Adım 4: Arayüz (Interface) Sözleşmesini Çiz]
-  ├── 'Core/Interfaces/' altında 'IService' ve 'IStrategy' arayüzlerini oluştur.
-  ├── Tüm metotları Result<T> dönecek ve CancellationToken alacak şekilde imzala.
-  └── Presentation katmanı için 'Web/ViewModels/' altında ViewModel sözleşmesini hazırla.
-
-[Adım 5: Mimari Uygunluk Denetimi]
-  ├── Core projesinin referanslarını denetle (Üçüncü parti bağımlılık var mı?).
-  └── ViewModel ile Entity arasında doğrudan sızıntı var mı kontrol et.
-```
-
----
-
-## 🔍 6. Çözüm Mimarının 10 Maddelik Uygunluk Kapısı
-
-| # | Kontrol Kriteri | Beklenen Standart | İhlal Durumunda |
-| :--- | :--- | :--- | :--- |
-| **1** | **Core İzolasyonu** | `Core` projesinde sıfır EF Core / Web referansı olmalıdır. | Referans varsa ➔ KESİN RED |
-| **2** | **Anemik Model Yasağı** | Domain Entity'lerinde kontrolsüz public setter bulunamaz. | Varsa ➔ Private set ve metot yap |
-| **3** | **Result Sözleşmesi** | Servis arayüzleri Exception yerine `Result` veya `Result<T>` dönmelidir. | Çıplak tip dönüyorsa ➔ RED |
-| **4** | **ViewModel İzolasyonu** | View katmanına asla Domain Entity gönderilemez; `ViewModel` zorunludur. | Entity varsa ➔ RED |
-| **5** | **Tasarım Kalıpları** | Dallanmalarda Strategy, dış API'de Adapter, kesişen işlerde Decorator şartnameye işlendi mi? | Belirtilmemişse ➔ RED |
-| **6** | **DIP Kuralı** | Controller'lar somut sınıflara değil, daima `Core` arayüzlerine (`IUserService`) bağımlı olmalıdır. | Somut sınıf varsa ➔ RED |
-| **7** | **CancellationToken** | Arayüzlerdeki tüm asenkron metotlar `CancellationToken ct = default` parametresi almalıdır. | Eksikse ➔ Ekle |
-| **8** | **Captive Dependency** | Singleton sınıflara Scoped nesne inject edilemez. | Varsa ➔ Yaşam döngüsünü düzelt |
-| **9** | **Kayıt Tarihçesi** | Tüm entity'ler `BaseEntity`'den türemeli ve `CreatedAt`, `ModifiedAt` yönetilmelidir. | Türemiyorsa ➔ RED |
-| **10**| **0 Compiler Warning** | Mimari şablonlar sıfır uyarı ile derlenmelidir. | Uyarı varsa ➔ RED |
+Bir görev kodlanmaya başlamadan önce (`dorMet: true`), Mimar şu şartları tamamlar:
+1. `contract.yaml` katman ve feature sınırlarına uygun model tasarlandı mı?
+2. Entity'ler zengin domain modeli (private setter, invariyant koruması) prensibinde mi?
+3. View için bağımsız `ViewModel` / `DTO` kontratı hazırlandı mı?
+4. Fonksiyonel gereksinim için uygun GoF veya Enterprise Tasarım Kalıbı belirlendi mi?
+5. Kritik mimari kararlar için `docs/adr/` altında ADR kaydı açıldı mı (R-AUT-004)?

@@ -1,237 +1,102 @@
-# Backend Geliştirme ve Temiz Kod (Clean Code) Kuralları
+# Backend Geliştirme, Temiz Kod ve UDAP v2 Standartları
 
-Bu kural, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayacağı **fonksiyon yönetimi**, **sınıf tasarımı**, **nesne yönelimli programlama (OOP)**, **tasarım kalıpları (Design Patterns)** ve **temiz kod (Clean Code)** anayasasını belirler. Tüm backend kodları bu kurallara uymak zorundadır.
+Bu anayasa, backend geliştiricilerinin (.NET 10 / C# 14) kod tabanında uygulayacağı **fonksiyon zanaatkarlığı**, **sınıf tasarımı**, **asenkron ve eşzamanlılık disiplini**, **veri erişimi (EF Core)**, **dayanıklı entegrasyon (Polly)**, **gözlemlenebilirlik (OpenTelemetry)** ve **UDAP v2 kural limitleri** standartlarını belirler.
 
 ---
 
 ## 📚 Dayandığı Literatür ve Standartlar
 - **Clean Code: A Handbook of Agile Software Craftsmanship** (Robert C. Martin - Uncle Bob)
 - **Design Patterns: Elements of Reusable Object-Oriented Software** (Gang of Four - GoF)
+- **Concurrency in C# Cookbook (2nd Edition)** (Stephen Cleary)
 - **Patterns of Enterprise Application Architecture** (Martin Fowler)
-- **Refactoring: Improving the Design of Existing Code** (Martin Fowler)
-- **Working Effectively with Legacy Code** (Michael Feathers)
-- **Code Complete (2nd Edition)** (Steve McConnell)
-- **C# Coding Conventions & Architecture Guides** (Microsoft)
+- **ISO/IEC 25010:2023** (Performance, Reliability, Maintainability, Analysability)
+- **Microsoft Framework Design Guidelines (MSFDG)**
+- **UDAP .NET Kural Kataloğu v2**
 
 ---
 
-## ⚡ BÖLÜM 1: Fonksiyon ve Metot Yönetimi (Function Craftsmanship)
+## ⚡ 1. Sözleşme Metrik Limitleri (`contract.yaml`)
 
-### 1. Tek Bir İş Yapma Kuralı (Do One Thing)
-- Bir fonksiyon yalnızca **tek bir iş yapmalı**, onu **mükemmel yapmalı** ve **yalnızca onu yapmalıdır**.
-- Bir fonksiyon içinde birden fazla soyutlama seviyesi (Level of Abstraction) bulunamaz. (Örn: Hem HTTP isteği ayrıştırıp, hem SQL sorgusu hazırlayıp, hem de hash hesaplayan metotlar yasaktır).
-
-### 2. Boyut Sınırı: Maksimum 15 - 25 Satır
-- Bir metot dikey kaydırma çubuğuna (scroll) ihtiyaç duymadan tek bakışta anlaşılmalıdır.
-- 25 satırı aşan metotlar SRP (Single Responsibility) ihlalidir; alt özel metotlara (`private helper`) bölünmelidir.
-
-### 3. Parametre Sayısı Sınırları (Clean Code Metric)
-- **İdeal:** 0 parametre (Niladic) veya 1 parametre (Monadic).
-- **Kabul Edilebilir:** En fazla 2 parametre (Dyadic).
-- **İnceleme Gerektirir:** 3 parametre (Triadic).
-- **🔴 KESİN YASAK:** 4 veya daha fazla parametre (Polyadic).
-  - *Kural:* 4 veya daha fazla parametre gerekiyorsa, bu parametreler bir `Command`, `Record` veya `Parameter Object` altında toplanmalıdır.
-  ```csharp
-  // KÖTÜ: 5 parametreli metot (Okuması ve testi kabus)
-  public Task RegisterUser(string name, string email, string phone, int roleId, bool sendEmail);
-
-  // İYİ: Niyet belirten Command record nesnesi
-  public Task<Result<Guid>> RegisterUserAsync(RegisterUserCommand command, CancellationToken ct = default);
-  ```
-
-### 4. Bayrak (Boolean Flag) Parametre Yasağı
-- Bir metoda `bool isSpecial`, `bool sendNotification` gibi bayrak parametreleri geçmek, o fonksiyonun en az iki farklı iş yaptığının açık kanıtıdır.
-- Bayrak parametresi yerine iki ayrı, açık niyetli metot yazılmalıdır:
-  ```csharp
-  // KÖTÜ:
-  public void ProcessOrder(Order order, bool isPriority);
-
-  // İYİ:
-  public void ProcessStandardOrder(Order order);
-  public void ProcessPriorityOrder(Order order);
-  ```
-
-### 5. Komut - Sorgu Ayrımı (Command Query Separation - CQS)
-- Bir metot ya bir durumu değiştirmelidir (Command) ya da bir soruya cevap vermelidir (Query).
-- **Asla ikisini birden yapmamalıdır.**
-- *Örnek İhlal:* `GetUser(Guid id)` çağrıldığında arka planda kullanıcının son giriş tarihini güncellemek veya oturum sayacını artırmak gibi gizli yan etkiler (Side Effects) **kesinlikle yasaktır**.
-
-### 6. Erken Dönüş ve Koruma İfadeleri (Guard Clauses & Fail-Fast)
-- İç içe girmiş `if-else` piramitleri (Arrow Anti-Pattern) yasaktır.
-- Maksimum girinti (indentation) seviyesi **2** olmalıdır.
-- Hata veya geçersiz durumlar metodun en başında kontrol edilip derhal dönülmelidir (`return` / `guard clause`):
-  ```csharp
-  // KÖTÜ: İç içe derin if piramidi
-  public Result Process(User? user)
-  {
-      if (user != null)
-      {
-          if (user.IsActive)
-          {
-              if (user.HasSufficientBalance())
-              {
-                  return Result.Success();
-              }
-              else { return Result.Failure("Yetersiz bakiye"); }
-          }
-          else { return Result.Failure("Kullanıcı pasif"); }
-      }
-      return Result.Failure("Kullanıcı bulunamadı");
-  }
-
-  // İYİ: Guard clauses ile düz ve temiz akış
-  public Result Process(User? user)
-  {
-      if (user is null) return Result.Failure("Kullanıcı bulunamadı");
-      if (!user.IsActive) return Result.Failure("Kullanıcı pasif");
-      if (!user.HasSufficientBalance()) return Result.Failure("Yetersiz bakiye");
-
-      return Result.Success();
-  }
-  ```
+| Metrik | İdeal Standart | Üst Sınır (İhlal) | İlgili Kural | Eylem |
+|---|---|---|---|---|
+| **Metot Satır Sayısı** | $\le 25$ satır | **Max 60 satır** | R-SOLID-010 | Aşıyorsa alt private fonksiyonlara parçala. |
+| **Sınıf Satır Sayısı** | $\le 250$ satır | **Max 400 satır** | R-SOLID-010 | Aşıyorsa SRP doğrultusunda sınıflara böl. |
+| **Metot Parametre Sayısı** | 0 - 2 parametre | **Max 3 (Triadic)** | R-SOLID-007 | 4+ parametre yasaktır; `Command` / `Record` nesnesi yap. |
+| **Siklomatik Karmaşıklık** | $1 - 5$ | **Max 10** | R-SOLID-008 | Strategy deseni veya pattern matching ile dallanmayı azalt. |
+| **Bilişsel Karmaşıklık** | $1 - 7$ | **Max 15** | R-SOLID-009 | İç içe blokları guard clause ile düzleştir. |
+| **İç İçe Koşul Derinliği**| $\le 2$ | **Max 3** | R-SOLID-011 | Erken dönüş (early return) ile tersine çevir. |
+| **Kalıtım Derinliği** | $\le 1$ | **Max 3** | R-SOLID-012 | Kalıtım yerine kompozisyon ve arayüz kullan. |
+| **Arayüz Metot Sayısı** | $1 - 3$ metot | **Max 5 metot** | R-SOLID-006 | ISP ilkesine uyarak daha küçük arayüzlere böl. |
+| **Constructor Bağımlılık** | $2 - 3$ servis | **Max 5 servis** | R-SOLID-007 | Facade deseni uygula veya sınıfı parçala. |
 
 ---
 
-## 🏛️ BÖLÜM 2: Sınıf Kapsamı ve Tasarımı (Class Craftsmanship)
+## ⚡ 2. Asenkron, Eşzamanlılık ve Kaynak Yönetimi (R-NET)
 
-### 1. Sınıf Boyutu ve Sorumluluk Sınırı
-- Bir sınıf maksimum **200-300 satır** olmalıdır.
-- **God Object / Helper / Manager Yasağı:** "Her işi yapan" devasa `CommonHelper`, `GeneralManager`, `Utils` sınıfları kesinlikle yasaktır.
-- Sınıf ismi net bir sorumluluğu ifade etmelidir (Örn: `PasswordHasher`, `InvoicePdfGenerator`, `OrderCancellationValidator`).
-
-### 2. Yüksek Bağdaşıklık (High Cohesion)
-- Bir sınıfın tüm metotları, sınıfın alanlarını (fields / dependencies) ortaklaşa kullanmalıdır.
-- Eğer bir sınıfın 3 metodu sadece `_repoA`'yı, diğer 3 metodu sadece `_serviceB`'yi kullanıyorsa, bu sınıf aslında iki ayrı sınıftır ve derhal bölünmelidir.
-
-### 3. Demeter Yasası (Law of Demeter - En Az Bilgi İlkesi)
-- Bir nesne sadece kendi doğrudan tanıdığı arkadaşlarının metotlarını çağırmalıdır.
-- Tren kazası (Train Wreck) gibi zincirleme çağrılar yasaktır:
-  ```csharp
-  // KÖTÜ: Demeter yasası ihlali (İç yapıya aşırı bağımlılık)
-  var zipCode = order.Customer.BillingAddress.City.ZipCode;
-
-  // İYİ: İlgili nesneye emretme (Tell, Don't Ask)
-  var zipCode = order.GetBillingZipCode();
-  ```
-
-### 4. Sorma, Emret (Tell, Don't Ask)
-- Nesnelerin iç durumunu dışarı çekip dışarıda karar vermek yerine, nesneye ne yapması gerektiği emredilmelidir:
-  ```csharp
-  // KÖTÜ: Nesnenin iç verisini sorgulayıp dışarıdan durumu değiştirmek
-  if (account.Balance >= amount)
-  {
-      account.Balance -= amount;
-  }
-
-  // İYİ: Nesneye emretmek ve invariyantı içeride korumak
-  account.Withdraw(amount);
-  ```
+1. **R-NET-001 [S1]:** `.Result`, `.Wait()` veya `GetAwaiter().GetResult()` kesinlikle yasaktır. Uçtan uca `async/await` işletilir (CWE-833).
+2. **R-NET-002 [S1]:** `async void` yalnızca UI/Event handler'larda kullanılabilir. Tüm asenkron metotlar `Task` veya `Task<T>` dönmelidir (CWE-248).
+3. **R-NET-003 [S2]:** Kütüphane ve altyapı kodlarında `.ConfigureAwait(false)` kullanımı zorunludur.
+4. **R-NET-004 [S1]:** Asenkron tüm I/O metot imzalarında `CancellationToken ct = default` bulunmalı ve alt çağrılara iletilmelidir (CWE-400).
+5. **R-NET-005 [S3]:** `Task` dönen tüm metot adları `Async` soneki ile bitmelidir (MSFDG).
+6. **R-NET-006 [S1]:** `lock` bloğu içinde `await` kullanılamaz; `SemaphoreSlim.WaitAsync` kullanılmalıdır.
+7. **R-NET-007 [S1]:** `IDisposable` ve `IAsyncDisposable` nesneler `using var` veya `await using var` ile tüketilmelidir (CA2000, CWE-404).
+8. **R-NET-008 [S1]:** `ValueTask` asla birden fazla kez await edilemez; gerekirse `AsTask()` çağrılmalıdır (CA2012).
+9. **R-NET-009 [S1]:** Awaitsiz arka plan görevleri (`fire-and-forget`) yasaktır; tüm görevler await edilmeli veya kontrollü Channel/Worker üzerinden yürütülmelidir (CS4014).
+10. **R-NET-070 [S1]:** `SemaphoreSlim` ve `Mutex` serbest bırakma çağrıları (`Release()`) daima `finally` bloğunda yapılmalıdır (CWE-667).
+11. **R-NET-071 [S2]:** `Parallel.ForEach` içinde async lambda kullanılamaz; .NET 6+ `Parallel.ForEachAsync` kullanılmalıdır.
+12. **R-NET-073 [S2]:** Sınırsız bellek büyümesini önlemek için kuyruklar daima sınırlandırılmış (bounded) olmalıdır (`Channel.CreateBounded<T>`).
 
 ---
 
-## 🧩 BÖLÜM 3: Nesne Yönelimli Programlama (OOP) ve Tasarım Kalıpları (Design Patterns)
+## ⚡ 3. Hata Yönetimi ve Yapılandırılmış Loglama (R-SEC & R-NET)
 
-### 1. Kapsülleme (Encapsulation) ve İç Durumun Korunması
-- Sınıf değişkenleri (fields) daima `private` olmalıdır.
-- Public getter olan alanların setter'ları mutlaka `private set` veya `init` olmalıdır.
-- Bir domain nesnesi **asla geçersiz (invalid) bir durumda yaratılamaz ve var olamaz**. Durum doğrulaması nesnenin kendi sınırları içinde yapılmalıdır.
-
-### 2. Kalıtım Yerine Bileşim (Composition over Inheritance)
-- Yalnızca kod tekrarını önlemek için derin miras ağaçları (`BaseService -> GenericService -> CustomService`) kurmak yasaktır.
-- Yeniden kullanılabilirlik (reusability) daima **Arayüzler (Interfaces)** ve **Bağımlılık Enjeksiyonu (Composition via DI)** ile sağlanmalıdır.
-
-### 3. Kurumsal Tasarım Kalıpları Standartları (GoF & Enterprise)
-
-#### A. Strategy Pattern (Açık Dallanma Yönetimi)
-- Tip veya enum ayrımı yaparak iş mantığı dallandırmak (`switch/case`, `if/else`) yerine Polymorphism ve Strateji Deseni kullanılır:
-  ```csharp
-  // KÖTÜ: Her yeni kuralda değişen kırılgan switch yapısı
-  public decimal CalculateDiscount(CustomerType type, decimal amount) => type switch { ... };
-
-  // İYİ: Açık strateji arayüzü ve IoC ile çözülen stratejiler
-  public interface IDiscountStrategy 
-  { 
-      bool AppliesTo(CustomerType type);
-      decimal Calculate(decimal amount); 
-  }
-  ```
-
-#### B. Adapter Pattern (Dış Kütüphane ve Servis İzolasyonu)
-- Üçüncü taraf kütüphaneler, SMS/Ödeme API'leri doğrudan domain katmanında tüketilemez. Domain'in ihtiyaç duyduğu arayüz Core'da tanımlanır, Infrastructure katmanında bir Adapter ile dış API adapte edilir:
-  ```csharp
-  // Core/Interfaces/IPaymentGateway.cs
-  public interface IPaymentGateway
-  {
-      Task<Result<PaymentTransactionId>> ChargeAsync(Money amount, PaymentCard card, CancellationToken ct);
-  }
-
-  // Infrastructure/Adapters/StripePaymentAdapter.cs
-  public class StripePaymentAdapter(StripeClient stripeClient) : IPaymentGateway { ... }
-  ```
-
-#### C. Decorator Pattern (Kesişen Endişeler - Cross-Cutting Concerns)
-- Caching, Logging, Exception Auditing gibi davranışları eklemek için temel servis koduna dokunulamaz (Open/Closed Principle). Servis bir Decorator sınıfı ile sarmalanır:
-  ```csharp
-  // İYİ: CachingDecorator ile temiz genişletme
-  public class CachedUserService(IUserService innerService, IMemoryCache cache) : IUserService
-  {
-      public async Task<Result<UserProfileViewModel>> GetProfileAsync(Guid id, CancellationToken ct)
-      {
-          return await cache.GetOrCreateAsync($"user-{id}", _ => innerService.GetProfileAsync(id, ct));
-      }
-      // Diğer metotlar doğrudan innerService'e delege edilir
-  }
-  ```
-
-#### D. Specification Pattern (Sorgulama ve Kural Enkapsülasyonu)
-- Domain varlıklarına uygulanan filtreleme veya doğrulama kuralları Controller veya Service katmanında dağınık LINQ ifadeleri olarak yazılamaz:
-  ```csharp
-  public interface ISpecification<T>
-  {
-      Expression<Func<T, bool>> ToExpression();
-      bool IsSatisfiedBy(T entity);
-  }
-  ```
-
-#### E. Factory & Builder Pattern (Güvenli Nesne Yaratımı)
-- Çok sayıda parametre alan veya iç bağımlılıkları olan nesnelerin doğrudan `new` ile public constructor üzerinden yaratılması yasaktır. Zengin Entity'lerde **Static Factory Metotları** (`User.Create(...)`), test ve karmaşık komutlarda **Builder** kalıbı zorunludur.
+1. **R-SEC-003 [S2]:** Ham `throw new Exception()` yasaktır. Ya spesifik bir domain istisnası ya da `Result.Failure(...)` deseni kullanılmalıdır.
+2. **R-SEC-004 [S1]:** `OperationCanceledException` yutulamaz; akış derhal sonlandırılmalı veya hata yeniden fırlatılmalıdır.
+3. **R-SEC-007 [S1]:** Boş `catch` bloğu kesinlikle yasaktır (CWE-390).
+4. **R-SEC-008 [S1]:** İç sistem istisna mesajları istemciye ham dönemez (CWE-209). RFC 7807 ProblemDetails dönülmelidir.
+5. **R-NET-080 [S2]:** `catch` yalnızca spesifik istisna tiplerini yakalamalıdır. Genel `catch (Exception ex)` yakalanıyorsa loglanıp orijinal `throw;` ile yeniden fırlatılmalıdır (`throw ex;` yasaktır).
+6. **R-NET-082 [S1]:** Global Exception Handler middleware zorunludur; stack trace dışarı sızdırılamaz.
+7. **R-NET-083 [S1]:** Güvenlik olayları (oturum açma başarısızlığı, yetki reddi, şüpheli işlem) açıkça audit loguna yazılmalıdır (ISO 21434, ASVS V16).
+8. **R-NET-084 [S1]:** Log injection engellenmelidir; kullanıcı girdileri doğrudan log formatına gömülemez (CWE-117).
+9. **R-NET-085 [S2]:** Loglamada string interpolasyonu (`logger.LogInformation($"User {id}")`) yasaktır. Yapılandırılmış şablon zorunludur: `logger.LogInformation("User {UserId}", id)`.
 
 ---
 
-## 🧹 BÖLÜM 4: Temiz Kod (Clean Code) Temel Değişmezleri
+## ⚡ 4. Veri Erişimi ve EF Core Performans Kuralları (R-NET)
 
-### 1. Niyet Belirten İsimlendirme (Intent-Revealing Names)
-- Değişken, fonksiyon ve sınıf adları şu 3 soruya net yanıt vermelidir: **Neden var? Ne yapar? Nasıl kullanılır?**
-- Tek harfli veya anlamsız isimler yasaktır (`d`, `usr`, `temp`, `data`, `res`, `flag`).
-- Kısaltma yerine açık isimler kullanılmalıdır (`btnSubmit` yerine `submitButton`, `ctx` yerine `dbContext`).
-
-### 2. İzci Kuralı (The Boy Scout Rule)
-> *"Her dokunduğun dosyayı, bulduğundan daha temiz bırak."*
-- Bir dosyada bug düzeltirken veya yeni özellik eklerken; yakınındaki kötü isimlendirilmiş değişkeni düzelt, gereksiz using'leri temizle, formatting bozukluğunu gider.
-
-### 3. Yorum Satırı Kokusu (Comments as Code Smell)
-- Kötü kodu açıklamak için yorum yazılmaz; kod kendini anlatacak kadar açık hale getirilir.
-- Yalnızca **"Neden"** sorusunun cevabı (örneğin yasal bir kuralı belgelemek için) yorum olarak yazılabilir.
-
-### 4. Sihirli Değerler Yasağı (No Magic Numbers or Strings)
-- Kodun içinde `if (status == 3)` veya `timeout = 86400` gibi bağlamsız değerler bulunamaz. Anlamlı `enum` veya `const` değerleri kullanılır.
-
-### 5. DRY (Don't Repeat Yourself) & YAGNI
-- İş kuralı mantığı tek bir yerde yaşamalıdır. İhtiyaç doğmadan varsayımsal karmaşıklıklar inşa edilemez (YAGNI).
+1. **R-NET-010 [S2]:** Salt okunur sorgularda `.AsNoTracking()` kullanımı zorunludur.
+2. **R-NET-011 [S2]:** Derin `.Include()` zincirleri yerine doğrudan DTO'ya `.Select(dto => new ...)` projeksiyonu yapılmalıdır.
+3. **R-NET-012 [S1]:** Lazy loading kapalı olmalıdır (`UseLazyLoadingProxies()` yasaktır). N+1 sorgu zincirleri engellenmelidir.
+4. **R-NET-013 [S1]:** Ham SQL sorgularında (`FromSqlRaw`) string birleştirme yasaktır; parametreli `FromSqlInterpolated` veya `SqlParameter` zorunludur (CWE-89).
+5. **R-NET-014 [S1]:** `DbContext` kesinlikle Singleton olarak kaydedilemez; Scoped olmalıdır (CWE-543).
+6. **R-NET-016 [S2]:** Senkron `SaveChanges()` yasaktır; `await SaveChangesAsync(ct)` kullanılmalıdır.
+7. **R-NET-017 [S1]:** Sayfalama (`.Skip().Take()`) yapılmadan sınırsız `ToListAsync()` çağrılması yasaktır (CWE-770).
+8. **R-NET-018 [S2]:** Transaction sınırları açıkça Unit of Work veya MediatR pipeline'ında yönetilmeli; rastgele SaveChanges çağrıları yapılmamalıdır.
+9. **R-NET-024 [S2]:** Eşzamanlı güncellenen entity'lerde `[Timestamp]` veya Concurrency Token kontrolü yapılmalıdır.
+10. **R-NET-025 [S3]:** Toplu güncellemelerde `ExecuteUpdateAsync` ve `ExecuteDeleteAsync` tercih edilmelidir.
 
 ---
 
-## 🔍 BÖLÜM 5: Backend Temiz Kod & Tasarım Kalıbı Onay Kapısı (10 Madde)
+## ⚡ 5. Dayanıklı Entegrasyon ve Dış Çağrı Kuralları (R-NET)
 
-| # | Kriter | Sınır / Standart | İhlal Durumu |
-| :--- | :--- | :--- | :--- |
-| **1** | **Metot Satır Sınırı** | Maksimum 25 satır | Aşıyorsa ➔ Parçala |
-| **2** | **Parametre Sayısı** | Maksimum 3 parametre (4+ yasak) | 4+ ise ➔ Parameter Object / Command yap |
-| **3** | **Bayrak Parametresi** | Metotta `bool flag` parametresi bulunamaz | Varsa ➔ İki ayrı metota böl |
-| **4** | **Guard Clauses** | İç içe derin `if` blokları yasaktır (Max girinti: 2) | Derinlik varsa ➔ Guard clause ile ters çevir |
-| **5** | **Sınıf Satır Sınırı** | Maksimum 250-300 satır | Aşıyorsa ➔ SRP doğrultusunda böl |
-| **6** | **Tasarım Kalıpları** | Switch/enum dallanmalarında Strategy, dış API'de Adapter, kesişen işlerde Decorator | Yoksa ➔ Uygun desene refactor et |
-| **7** | **Kapsülleme** | Public field veya kontrolsüz `public set` bulunamaz | Varsa ➔ `private set` ve fabrika metodu ile koru |
-| **8** | **CQS İhlali** | Durum değiştiren metot veri dönmemeli / gizli yan etki yapmamalı | Varsa ➔ Ayrıştır |
-| **9** | **Sihirli Değerler** | Kod içinde çıplak sayı/metin bulunamaz | Varsa ➔ `const` veya `enum` yap |
-| **10**| **İzci Kuralı & Yorum** | Kodu anlatan gereksiz yorum ve kullanılmayan using'ler | Varsa ➔ Kodu netleştir, fazlalıkları sil |
+1. **R-NET-022 [S1]:** `new HttpClient()` açılması yasaktır; daima `IHttpClientFactory` veya Typed Client kullanılmalıdır (CWE-404).
+2. **R-NET-040 [S1]:** Tüm dış servis çağrılarında `X-Correlation-Id` başlığı taşınmalıdır (W3C traceparent).
+3. **R-NET-041 [S1]:** Mesaj ve webhook işleyicilerinde idempotency anahtarı kontrolü zorunludur.
+4. **R-NET-042 [S1]:** Dış çağrılarda Polly retry politikası bulunması zorunludur.
+5. **R-NET-045 [S1]:** Timeout yapılandırması olmayan `HttpClient` çağrısı yasaktır (CWE-400).
+6. **R-NET-046 [S2]:** Polly Circuit Breaker politikası tanımlı olmalıdır.
+7. **R-NET-047 [S1]:** Retry politikası yalnızca idempotent (GET, PUT veya idempotency anahtarlı POST) operasyonlarda işletilebilir.
+8. **R-NET-048 [S2]:** Retry bekleme sürelerinde üstel geri çekilme ve rastgele gecikme (exponential backoff + jitter) zorunludur.
+9. **R-NET-049 [S1]:** Mesaj sözleşmelerinde `int Version` veya `string SchemaVersion` alanı bulunması zorunludur.
+10. **R-NET-056 [S1]:** Outbox Pattern: Veritabanı transaction'ı içinde harici HTTP veya Service Bus çağrısı yapılamaz. Mesajlar önce veritabanı Outbox tablosuna yazılır.
+11. **R-NET-058 [S1]:** Webhook endpoint'lerinde HMAC imza doğrulaması zorunludur (CWE-345).
+
+---
+
+## ⚡ 6. Gözlemlenebilirlik ve Telemetri (R-OBS)
+
+1. **R-OBS-001 [S2]:** Her harici HTTP veya veritabanı entegrasyonu bir OpenTelemetry `Activity` (span) açmalıdır.
+2. **R-OBS-002 [S1]:** Dağıtık izleme için W3C `traceparent` başlığı giden tüm isteklere enjekte edilmelidir.
+3. **R-OBS-003 [S2]:** Uygulama `/health/live` (liveness) ve `/health/ready` (readiness) sağlık kontrolü endpoint'lerini barındırmalıdır.
+4. **R-OBS-005 [S1]:** Finansal veya idari onay gibi kritik iş akışları için değişmez denetim kaydı (audit log) zorunludur.
+5. **R-OBS-006 [S2]:** Metrik etiketlerinde yüksek kardinalite patlaması (GUID veya e-posta gibi benzersiz değerlerin etiket yapılması) yasaktır.

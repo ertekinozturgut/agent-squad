@@ -1,21 +1,43 @@
 <Project>
   <PropertyGroup>
-    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- R-NET-062: Sabit Analiz Sürümü (Tekrarlanabilirlik) -->
+    <AnalysisLevel>9.0-recommended</AnalysisLevel>
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <!-- R-NET-064: Nullable Reference Types -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- R-NET-063: Sıfır Uyarı Toleransı (CI ve Geliştirme) -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- SonarAnalyzer.CSharp: Clean Code & Kod Kokuları (R-SOLID-008, R-SOLID-009) -->
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.7.0.110445">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+
+    <!-- Roslynator: C# Dil ve API Hijyeni -->
     <PackageReference Include="Roslynator.Analyzers" Version="4.13.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+
+    <!-- BannedApiAnalyzers: R-NET-050 (DateTime.Now), R-CRY-001 (Zayıf Kripto), R-NET-001 (.Result) -->
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+
+    <!-- Visual Studio Threading Analyzers: R-NET-001 (VSTHRD002), R-NET-002 (VSTHRD100) -->
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.13.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)BannedSymbols.txt')">
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
   </ItemGroup>
 </Project>

@@ -85,15 +85,22 @@ Feature: Kullanıcı Profil Güncelleme (Profile Management)
 
 ---
 
-## 📊 4. Veri Sözlüğü (Data Dictionary) Standardı
+## 📊 4. Veri Sözlüğü ve Kişisel Veri (KVKK / PII) Sınıflandırması
 
-Tasarımcı ve backend geliştiricisinin kafasına göre kural uydurmaması için her ekran için bir veri sözlüğü tablosu hazırlanır:
+Tasarımcı, backend geliştiricisi ve denetçilerin tam mutabakat sağlaması için her alanın iş kuralı ve **KVKK / PII sınıflandırması** veri sözlüğünde açıkça belirtilir:
 
-| Alan Adı | Tip | Zorunlu? | Kısıtlar & Format | Hata Mesajı | UI Bileşeni & İpucu |
+| Alan Adı | Tip | PII? | Kısıtlar & Format | Maskeleme / Güvenlik Kuralı | UI Bileşeni & İpucu |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `FullName` | String | Evet | Min: 3, Max: 50 karakter | "Ad Soyad 3 ile 50 karakter arasında olmalıdır." | Tek satır metin kutusu, `placeholder="Örn: Ahmet Yılmaz"` |
-| `Email` | String | Evet | Geçerli e-posta formatı | "Geçerli bir e-posta adresi giriniz." | E-posta girdi tipi (`type="email"`), küçük harfe dönüştürülür |
-| `PhoneNumber`| String | Hayır | `+90 (5XX) XXX XX XX` | "Lütfen geçerli bir telefon formatı giriniz." | Maskeli input, isteğe bağlı |
+| `FullName` | String | Evet (PII) | Min: 3, Max: 50 karakter | Loglarda maskelenir, `[SensitiveData]` | Tek satır metin kutusu, `placeholder="Örn: Ahmet Yılmaz"` |
+| `Email` | String | Evet (PII) | RFC 5322 e-posta formatı | Query string'de taşınamaz, logda hash'lenir | E-posta girdi tipi (`type="email"`), küçük harf |
+| `PhoneNumber`| String | Evet (PII) | `+90 (5XX) XXX XX XX` | Üçüncü tarafa maskeli aktarılır | Maskeli input, telefon formatı |
+| `Vin` (Şasi No)| String | Evet (R-AUT) | 17 karakter alfanümerik | Otomotiv kişisel verisidir (ISO 21434) | Büyük harf metin kutusu, `[SensitiveData]` |
+| `PlateNumber`| String | Evet (R-AUT) | Standart Türkiye plaka | Loglarda maskelenir | Büyük harf plaka bileşeni (`34ABC123`) |
+| `BirthDate` | Date | Evet (PII) | Geçmiş tarih, yaş $\ge 18$ | Doğrudan istemciye açık dönemez | Tarih seçici (`type="date"`) |
+| `OrderTotal` | Decimal | Hayır | Pozitif para tutarı | Finansal denetim izi (Audit Log) | Para birimli input (`1.250,00 ₺`) |
+
+> [!IMPORTANT]
+> **KVKK / GDPR / ISO 21434 Kuralı:** `Tckn`, `Vkn`, `Email`, `Phone`, `PlateNumber`, `Vin`, `ChassisNo`, `EngineNo`, `DriverLicenseNo`, `Iban`, `Address`, `BirthDate` alanları tanımlandığında mutlaka analist tarafından `PII: Evet` olarak işaretlenmeli; retention (saklama) ve açık rıza gereksinimleri kabul kriterlerine eklenmelidir.
 
 ---
 

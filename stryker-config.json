@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-net/master/src/Stryker.Core/Stryker.Core/stryker-config.schema.json",
+  "stryker-config": {
+    "mutate": [
+      "src/*/Domain/**",
+      "src/*/Application/**",
+      "!**/*.Generated.cs",
+      "!**/Migrations/**",
+      "!**/Dtos/**"
+    ],
+    "solution": "Company.sln",
+    "test-projects": [
+      "tests/**/*.Tests.csproj"
+    ],
+    "reporters": [
+      "progress",
+      "cleartext",
+      "html",
+      "json"
+    ],
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 60
+    },
+    "since": {
+      "enabled": true,
+      "target": "origin/main",
+      "ignore-changes-in": [
+        "**/*.md",
+        "**/*.json",
+        "**/*.yaml",
+        "**/*.yml"
+      ]
+    },
+    "mutation-level": "Standard",
+    "concurrency": 4,
+    "max-survived-mutants": 0,
+    "comment": "R-TST-001: Değişen dosyalarda hayatta kalan mutant sayısı 0 olmalıdır. Hedef projeye entegre edilirken 'solution' alanı projenin .sln adıyla güncellenmelidir."
+  }
+}

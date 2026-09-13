@@ -1,0 +1,46 @@
+// ===========================================================================
+// BannedSymbols.txt - UDAP .NET v2 Kural Kataloğu Banned Symbol Tanımları
+// Enforced by Microsoft.CodeAnalysis.BannedApiAnalyzers
+// ===========================================================================
+
+// ---------------------------------------------------------------------------
+// R-NET-050: Determinizm ve Zaman Soyutlaması
+// ---------------------------------------------------------------------------
+P:System.DateTime.Now;R-NET-050: DateTime.Now sistem saatine doğrudan bağımlıdır; test edilebilirliği bozar. TimeProvider kullanın.
+P:System.DateTime.UtcNow;R-NET-050: DateTime.UtcNow sistem saatine doğrudan bağımlıdır; test edilebilirliği bozar. TimeProvider kullanın.
+P:System.DateTimeOffset.Now;R-NET-050: DateTimeOffset.Now yerine TimeProvider.GetUtcNow() / GetLocalNow() kullanın.
+P:System.DateTimeOffset.UtcNow;R-NET-050: DateTimeOffset.UtcNow yerine TimeProvider.GetUtcNow() kullanın.
+
+// ---------------------------------------------------------------------------
+// R-NET-001: Senkron Bloklama ve Deadlock Önleme
+// ---------------------------------------------------------------------------
+P:System.Threading.Tasks.Task`1.Result;R-NET-001: Task<T>.Result thread-pool starvation'a ve kilitlenmeye yol açar; await kullanın.
+M:System.Threading.Tasks.Task.Wait;R-NET-001: Task.Wait() senkron bloklama yapar; await kullanın.
+M:System.Threading.Tasks.Task.Wait(System.Int32);R-NET-001: Task.Wait(...) senkron bloklama yapar; await kullanın.
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan);R-NET-001: Task.Wait(...) senkron bloklama yapar; await kullanın.
+M:System.Threading.Tasks.Task.Wait(System.Threading.CancellationToken);R-NET-001: Task.Wait(...) senkron bloklama yapar; await kullanın.
+
+// ---------------------------------------------------------------------------
+// R-CRY-001: Zayıf ve Kırılmış Kriptografik Algoritmalar
+// ---------------------------------------------------------------------------
+T:System.Security.Cryptography.MD5;R-CRY-001: Zayıf kriptografik algoritma 'MD5' kullanımı yasaktır. SHA256 veya AES kullanın.
+M:System.Security.Cryptography.MD5.Create;R-CRY-001: 'MD5.Create()' çağrısı yasaktır.
+T:System.Security.Cryptography.SHA1;R-CRY-001: Zayıf kriptografik algoritma 'SHA1' kullanımı yasaktır. SHA256 veya AES kullanın.
+M:System.Security.Cryptography.SHA1.Create;R-CRY-001: 'SHA1.Create()' çağrısı yasaktır.
+T:System.Security.Cryptography.DES;R-CRY-001: Zayıf kriptografik algoritma 'DES' kullanımı yasaktır. SHA256 veya AES kullanın.
+M:System.Security.Cryptography.DES.Create;R-CRY-001: 'DES.Create()' çağrısı yasaktır.
+T:System.Security.Cryptography.TripleDES;R-CRY-001: Zayıf kriptografik algoritma 'TripleDES' kullanımı yasaktır. SHA256 veya AES kullanın.
+M:System.Security.Cryptography.TripleDES.Create;R-CRY-001: 'TripleDES.Create()' çağrısı yasaktır.
+T:System.Security.Cryptography.RC2;R-CRY-001: Zayıf kriptografik algoritma 'RC2' kullanımı yasaktır. SHA256 veya AES kullanın.
+M:System.Security.Cryptography.RC2.Create;R-CRY-001: 'RC2.Create()' çağrısı yasaktır.
+
+// ---------------------------------------------------------------------------
+// R-NET-022: new HttpClient() Yasağı
+// ---------------------------------------------------------------------------
+M:System.Net.Http.HttpClient.#ctor;R-NET-022: 'new HttpClient()' soket tükenmesine yol açar; IHttpClientFactory kullanın.
+
+// ---------------------------------------------------------------------------
+// R-TST-003: Testlerde Thread.Sleep Yasağı
+// ---------------------------------------------------------------------------
+M:System.Threading.Thread.Sleep(System.Int32);R-TST-003: Thread.Sleep testleri yavaşlatır ve kırılgan yapar; Task.Delay veya TaskCompletionSource kullanın.
+M:System.Threading.Thread.Sleep(System.TimeSpan);R-TST-003: Thread.Sleep testleri yavaşlatır ve kırılgan yapar; Task.Delay veya TaskCompletionSource kullanın.

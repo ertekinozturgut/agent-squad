@@ -166,6 +166,42 @@
           },
           "securityAuditPassed": {
             "type": "boolean"
+          },
+          "mutationScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Stryker .NET mutation testing score (R-TST-001 requires 0 survived mutants on changed code)"
+          },
+          "standardTraceability": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Cross-referenced standards (e.g., ASVS-V14, ISO25010-Security, KVKK-m12, CWE-89)"
+          },
+          "toolAuditResults": {
+            "type": "object",
+            "properties": {
+              "archunit": { "type": "string", "enum": ["pass", "fail", "skip"] },
+              "opengrep": { "type": "string", "enum": ["pass", "fail", "skip"] },
+              "codeql": { "type": "string", "enum": ["pass", "fail", "skip"] },
+              "stryker": { "type": "string", "enum": ["pass", "fail", "skip"] },
+              "roslyn": { "type": "string", "enum": ["pass", "fail", "skip"] }
+            }
+          },
+          "suppressions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["ruleId", "reason", "approvedBy"],
+              "properties": {
+                "ruleId": { "type": "string" },
+                "reason": { "type": "string" },
+                "approvedBy": { "type": "string" }
+              }
+            },
+            "description": "Documented S2 exceptions approved with @UdapSuppress"
           }
         }
       }

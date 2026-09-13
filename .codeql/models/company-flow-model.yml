@@ -1,0 +1,121 @@
+name: company-security/csharp-flow-models
+version: 2.0.0
+description: Custom CodeQL C# data-flow models and taint tracking specifications (UDAP .NET v2).
+pii_tracked_fields:
+- Tckn
+- Vkn
+- Email
+- Phone
+- PlateNumber
+- Vin
+- ChassisNo
+- EngineNo
+- DriverLicenseNo
+- Iban
+- Address
+- BirthDate
+extensions:
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sourceModel
+  data:
+  - - Company.Integration.ServiceBusEnvelope
+    - Body
+    - ''
+    - remote
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sourceModel
+  data:
+  - - Company.Integration.Crm.CrmWebhookPayload
+    - RawJson
+    - ''
+    - remote
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sourceModel
+  data:
+  - - Microsoft.AspNetCore.Http.HttpRequest
+    - Query
+    - ''
+    - remote
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Microsoft.Extensions.Logging.ILogger
+    - Log
+    - (System.Object)
+    - log-injection
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Company.Logging.AuditLogger
+    - Write
+    - (System.Object)
+    - log-injection
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Company.Data.SqlRunner
+    - Execute
+    - (System.Object)
+    - sql-injection
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Dapper.SqlMapper
+    - Query
+    - (System.Object)
+    - sql-injection
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Company.Integration.SalesforceClient
+    - Post
+    - (System.Object)
+    - http-injection
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: neutralModel
+  data:
+  - - Company.Common.Sanitizer
+    - Escape
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: neutralModel
+  data:
+  - - Company.Common.Redactor
+    - Mask
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Microsoft.Extensions.Logging.ILogger
+    - Log
+    - (System.Object)
+    - pii-leakage
+    - manual
+- addsTo:
+    pack: codeql/csharp-all
+    extensible: sinkModel
+  data:
+  - - Company.Logging.AuditLogger
+    - Write
+    - (System.Object)
+    - pii-leakage
+    - manual

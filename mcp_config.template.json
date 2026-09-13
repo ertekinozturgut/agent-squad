@@ -1,11 +1,11 @@
 {
   "mcpServers": {
-    "semgrep": {
-      "command": "uvx",
+    "opengrep": {
+      "command": "opengrep",
       "args": [
-        "semgrep-mcp",
-        "-t",
-        "stdio"
+        "scan",
+        "--config",
+        ".opengrep/rules.yaml"
       ]
     }
   }

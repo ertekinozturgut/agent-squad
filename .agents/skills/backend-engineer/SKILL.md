@@ -1,14 +1,14 @@
 ---
 name: backend-engineer
-description: C# 14, .NET 10, ASP.NET Core MVC Controller/Action metotları, EF Core 10 veri erişimi, Result deseni, Tüm GoF Tasarım Kalıpları (23 Kalıp) ve Kurumsal Desenleri (Specification, Unit of Work, Options) eksiksiz uygular.
+description: C# 14, .NET 10, ASP.NET Core MVC Controller/Action metotları, EF Core 10 veri erişimi, Result deseni, Tüm GoF Tasarım Kalıpları (23 Kalıp), UDAP v2 Kural Kataloğu ve Kurumsal Desenleri (Specification, Unit of Work, Options) eksiksiz uygular.
 ---
 
-# .NET 10 Backend Geliştirici Uzmanlık Rehberi (Clean Architecture & Full Design Patterns Encyclopedia)
+# .NET 10 Backend Geliştirici Uzmanlık Rehberi (UDAP v2 Clean Architecture & Full Design Patterns)
 
-Bu rehber, projedeki backend geliştirmelerinin mimari değişmezlere uyumlu; asenkron, yüksek performanslı, nesne yönelimli programlama (OOP), **Tüm Gang of Four (GoF) Tasarım Kalıpları (23 Kalıp)**, **Kurumsal .NET Desenleri** ve **Temiz Kod (Clean Code)** standartlarında üretilmesini sağlayan kuralları ve somut C# 14 / .NET 10 uygulamalarını içerir.
+Bu rehber, projedeki backend geliştirmelerinin mimari değişmezlere uyumlu; asenkron, yüksek performanslı, nesne yönelimli programlama (OOP), **Tüm Gang of Four (GoF) Tasarım Kalıpları (23 Kalıp)**, **UDAP v2 Kural Kataloğu (175 Kural)**, **Kurumsal .NET Desenleri** ve **Temiz Kod (Clean Code)** standartlarında üretilmesini sağlayan kuralları ve somut C# 14 / .NET 10 uygulamalarını içerir.
 
 > [!IMPORTANT]
-> Tüm backend geliştirmelerinde proje anayasası olan `05-backend-development-clean-code-standards.md` ve `02-architecture-invariants.md` kurallarına harfiyen uyulması zorunludur.
+> Tüm backend geliştirmelerinde proje anayasası olan `05-backend-development-clean-code-standards.md`, `02-architecture-invariants.md`, `BannedSymbols.txt` ve `.agents/contract.yaml` sınırlarına harfiyen uyulması zorunludur.
 
 ---
 
@@ -17,27 +17,30 @@ Bu rehber, projedeki backend geliştirmelerinin mimari değişmezlere uyumlu; as
 1. **Clean Code: A Handbook of Agile Software Craftsmanship** (Robert C. Martin - Uncle Bob)
 2. **Design Patterns: Elements of Reusable Object-Oriented Software** (Gang of Four - Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides)
 3. **Patterns of Enterprise Application Architecture (PoEAA)** (Martin Fowler)
-4. **Refactoring: Improving the Design of Existing Code** (Martin Fowler)
-5. **C# in Depth (4th Edition)** (Jon Skeet)
-6. **CLR via C# (4th Edition)** (Jeffrey Richter)
-7. **Concurrency in C# Cookbook (2nd Edition)** (Stephen Cleary)
+4. **Concurrency in C# Cookbook (2nd Edition)** (Stephen Cleary)
+5. **UDAP .NET Kural Kataloğu v2 (175 Kural)**
+6. **Microsoft Framework Design Guidelines (MSFDG)**
 
 ---
 
-## ⚡ 2. Fonksiyon ve Metot Yönetimi (Function Craftsmanship)
+## ⚡ 2. UDAP v2 Metrik Limitleri ve Fonksiyon Zanaatkarlığı
 
 1. **Tek Sorumluluk (Do One Thing):** Bir fonksiyon yalnızca tek bir iş yapmalı, onu mükemmel yapmalı ve yalnızca onu yapmalıdır.
-2. **Boyut Sınırı: Maksimum 15 - 25 Satır:** Ekranı dikey kaydırmadan tek bakışta anlaşılmalıdır. 25 satırı aşan metotlar SRP ihlalidir.
-3. **Parametre Sayısı Kuralı:** İdeal: 0 veya 1 parametre. En fazla: 2 parametre. 4 veya daha fazla parametre **kesinlikle yasaktır**; `Command`, `Record` veya `Parameter Object` altında toplanmalıdır.
+2. **Boyut Sınırları:** İdeal: 15 - 25 satır. Üst sınır: Max 60 satır (R-SOLID-010). Sınıf boyutu: İdeal 200 - 300 satır, Üst sınır: Max 400 satır.
+3. **Parametre Sayısı Kuralı:** İdeal: 0 - 2 parametre. Max: 3 parametre. 4 veya daha fazla parametre **kesinlikle yasaktır**; `Command` veya `Record` nesnesi yapılmalıdır.
 4. **Bayrak (Boolean Flag) Parametre Yasağı:** `bool isSpecial` gibi bayraklar yasaktır. İki ayrı açık isimli metot yazılmalıdır.
 5. **Komut - Sorgu Ayrımı (CQS):** Bir metot ya durumu değiştirmeli (Command) ya da soruya cevap vermelidir (Query). Gizli yan etki (side effect) yasaktır.
 6. **Guard Clauses & Fail-Fast (Max Girinti: 2):** İç içe derin `if-else` piramitleri yasaktır; hata durumları en başta `return` edilmelidir.
+7. **Determinizm ve Zaman (R-NET-050):** `DateTime.Now/UtcNow` yasaktır (`BannedSymbols.txt`). .NET 8+ `TimeProvider` soyutlaması kullanılmalıdır.
+8. **Asenkron Hijyen (R-NET-001..009):** Sıfır `.Result`, sıfır `.Wait()`, `CancellationToken` zinciri, `lock` içinde await yasağı, `ValueTask` tek await.
+9. **Yapılandırılmış Loglama (R-NET-085):** String interpolasyonu yasaktır; `logger.LogInformation("User {UserId}", id)` şablonu zorunludur.
+10. **EF Core Hijyeni (R-NET-010..017):** Okuma sorgularında `.AsNoTracking()`, projeksiyon (`.Select()`), lazy loading yasağı, sayfalama olmaksızın `ToListAsync()` yasağı.
 
 ---
 
 ## 🏛️ 3. Sınıf Kapsamı ve Tasarımı (Class Craftsmanship)
 
-1. **Sınıf Boyutu: Maksimum 200 - 300 Satır:** God Object, `CommonHelper`, `GeneralManager` gibi her işe bakan sınıflar yasaktır.
+1. **Sınıf Boyutu: Maksimum 250 - 300 Satır (Üst sınır: 400):** God Object, `CommonHelper`, `GeneralManager` gibi her işe bakan sınıflar yasaktır.
 2. **Yüksek Bağdaşıklık (High Cohesion):** Sınıfın tüm metotları ortak alanları/bağımlılıkları kullanmalıdır.
 3. **Demeter Yasası (Law of Demeter):** `order.Customer.Address.City.ZipCode` yerine `order.GetBillingZipCode()` (Tell, Don't Ask).
 4. **Kapsülleme (Encapsulation):** Public field ve kontrolsüz public setter yasaktır. İç durum daima `private set` veya metotlarla korunur.

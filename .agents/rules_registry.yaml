@@ -1,0 +1,2772 @@
+- id: R-ARCH-001
+  text: Domain dış katmanlara bağımlı olamaz
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.DomainLayerMustNotDependOnExternalLayers
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+    asvs:
+    - V15
+  rationale: Domain saf iş kurallarını barındırır; dış katman bağımlılığı test edilebilirliği ve esnekliği bozar.
+  remediation: Domain projesinden tüm Application, Infrastructure ve Presentation referanslarını kaldır.
+  exceptions_allowed: false
+- id: R-ARCH-002
+  text: Application yalnızca Domain'e bağımlı
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.ApplicationLayerMustDependOnlyOnDomain
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Uygulama orkestrasyonu altyapı somutlamalarını doğrudan tanıyamaz, soyutlamalar üzerinden çalışır.
+  remediation: Infrastructure ve Web referanslarını Application katmanından kaldır.
+  exceptions_allowed: false
+- id: R-ARCH-003
+  text: Domain'de framework tipi yok
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.DomainMustNotReferenceFrameworkTypes
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Flexibility/Replaceability
+  rationale: Framework bağımlılığı Domain'i teknoloji sağlayıcısına kilitler.
+  remediation: Entity Framework, ASP.NET Core veya harici SDK tiplerini Domain'den temizle.
+  exceptions_allowed: false
+- id: R-ARCH-004
+  text: Api katmanı Infrastructure'a doğrudan erişemez
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.ApiMustNotDirectlyAccessInfrastructure
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    asvs:
+    - V15
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Sunum katmanı altyapı detaylarına bağımlı olmamalıdır; arayüzler ve uygulama servisleri kullanılmalıdır.
+  remediation: Api projesindeki doğrudan Infrastructure referansını kaldır, DI üzerinden soyutlama bağla.
+  exceptions_allowed: false
+- id: R-ARCH-005
+  text: Domain tipleri Api imzalarında görünemez
+  severity: S1
+  layer: L1
+  owner: archunit
+  enforced_by: ArchUnitNET.DomainTypesMustNotAppearInApiSignatures
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-915
+    asvs:
+    - V4
+  rationale: Domain entity'lerinin dışarıya sızması mass-assignment ve tight-coupling risklerine yol açar.
+  remediation: Api endpoint'lerinde yalnızca ViewModel veya Request/Response DTO kullan.
+  exceptions_allowed: false
+- id: R-ARCH-006
+  text: Katmanlar arası geçiş yalnızca arayüz üzerinden
+  severity: S2
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.CrossLayerCallsMustUseInterfaces
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: Somut sınıflar arası sıkı bağ bakım maliyetini ve kırılganlığı artırır.
+  remediation: Çağrılan servisleri arayüz arkasına al ve Dependency Injection ile bağla.
+  exceptions_allowed: true
+- id: R-ARCH-007
+  text: Döngüsel namespace bağımlılığı yok
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.NoCircularNamespaceDependencies
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Döngüsel bağımlılıklar kod tabanını anlaşılamaz hale getirir ve derleme/yükleme problemlerine yol açar.
+  remediation: Ortak bağımlılıkları SharedKernel veya alt namespace'e taşıyarak döngüyü kır.
+  exceptions_allowed: false
+- id: R-ARCH-008
+  text: Public API yüzeyi izlenir (istenmeyen genişleme yok)
+  severity: S2
+  layer: L1
+  owner: roslyn
+  enforced_by: PublicApiAnalyzers.RS0016
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/PublicApiSurface
+  rationale: Gereksiz yere public yapılan tipler kütüphane sözleşmesini bozar ve geriye uyumluluk yükü oluşturur.
+  remediation: Yalnızca tüketilmesi gereken tipleri public yap, diğerlerini internal olarak işaretle.
+  exceptions_allowed: true
+- id: R-ARCH-009
+  text: internal varsayılan; public gerekçe ister
+  severity: S3
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.PreferInternalOverPublic
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.05
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/Encapsulation
+  rationale: Geniş erişilebilirlik alanı istenmeyen coupling'e yol açar.
+  remediation: Sınıfları varsayılan olarak internal yap.
+  exceptions_allowed: true
+- id: R-ARCH-010
+  text: Assembly başına tek sorumluluk (marker tip zorunlu)
+  severity: S3
+  layer: L3
+  owner: process
+  enforced_by: ArchUnitNET.RequireAssemblyMarkerType
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Assembly taramalarında ve DI kayıtlarında marker interface veya marker tip bulunması zorunludur.
+  remediation: Assembly köküne IAssemblyMarker arayüzünü ekle.
+  exceptions_allowed: true
+- id: R-MOD-001
+  text: Feature → Feature bağımlılığı yok
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.FeaturesMustNotDependOnEachOther
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Dikey dilimlerin (vertical slices) birbirine doğrudan referans vermesi modüler monolit sınırlarını yıkar.
+  remediation: Feature'lar arası iletişimi domain event'ler veya MediatR/In-Process bus üzerinden sağla.
+  exceptions_allowed: false
+- id: R-MOD-003
+  text: Paylaşılan kod yalnızca Common/SharedKernel altında
+  severity: S2
+  layer: L3
+  owner: process
+  enforced_by: ArchUnitNET.SharedCodeMustBeInSharedKernel
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Ortak kodların feature içine gizlenmesi kod kopyalamaya ve senkronizasyon kaybına yol açar.
+  remediation: Ortak yardımcı ve çekirdek modelleri Company.SharedKernel altına taşı.
+  exceptions_allowed: true
+- id: R-MOD-004
+  text: SharedKernel hiçbir feature'a bağımlı olamaz
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.SharedKernelMustNotDependOnFeatures
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: SharedKernel çekirdek temeldir, işlevsel feature'lara bağımlı olması döngüsel bağımlılık yaratır.
+  remediation: SharedKernel içinden feature bağımlılıklarını kaldır.
+  exceptions_allowed: false
+- id: R-SOLID-001
+  text: Handler tek public metot
+  severity: S2
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.HandlerMustHaveSinglePublicMethod
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: CQRS / Command handler nesneleri yalnızca Handle / HandleAsync gibi tek bir amaca hizmet etmelidir.
+  remediation: Fazladan public metotları özel metoda çevir veya yeni bir handler'a böl.
+  exceptions_allowed: true
+- id: R-SOLID-003
+  text: Constructor'da somut sınıf yok
+  severity: S1
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.ConstructorMustNotDependOnConcreteClasses
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: Constructor parametrelerinde somut sınıf kullanımı sıkı bağlılık oluşturur.
+  remediation: Somut sınıf yerine arayüz (interface) enjekte et.
+  exceptions_allowed: false
+- id: R-SOLID-004
+  text: NotImplementedException üretimde yok
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-notimplemented-exception
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-670
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Üretimde fırlatılan NotImplementedException uygulamanın eksik veya sahte davranış gösterdiğini kanıtlar.
+  remediation: Eksik metodu implemente et veya kullanılmıyorsa arayüzden ve sınıftan sil.
+  exceptions_allowed: false
+- id: R-SOLID-005
+  text: Sınıflar varsayılan olarak sealed olmalıdır
+  severity: S2
+  layer: L3
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S2325
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/Inheritance
+  rationale: Açıkça kalıtım amaçlanmayan sınıfların türetilmesi beklenmedik yan etkilere yol açar.
+  remediation: Sınıf tanımına 'sealed' anahtar sözcüğünü ekle.
+  exceptions_allowed: true
+- id: R-SOLID-006
+  text: Interface ≤ 5 metot
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: ArchUnitNET.InterfaceMethodCountLimit
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Şişkin arayüzler Interface Segregation Principle (ISP) ihlalidir.
+  remediation: Arayüzü amaca yönelik daha küçük arayüzlere böl.
+  exceptions_allowed: true
+- id: R-SOLID-007
+  text: Constructor ≤ 5 bağımlılık
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: ArchUnitNET.ConstructorParameterCountLimit
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Çok sayıda bağımlılık alan sınıflar SRP ihlali kokusudur ve aşırı sorumluluk taşırlar.
+  remediation: Facade deseni kullan veya sınıfı daha küçük sorumluluklara parçala.
+  exceptions_allowed: true
+- id: R-SOLID-008
+  text: Metot siklomatik karmaşıklık ≤ 10
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S1541
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Yüksek siklomatik karmaşıklık test edilebilirliği zorlaştırır ve hata olasılığını artırır.
+  remediation: Metodu Strategy veya alt fonksiyonlara bölerek dallanmayı azalt.
+  exceptions_allowed: true
+- id: R-SOLID-009
+  text: Bilişsel karmaşıklık ≤ 15
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S3776
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Bilişsel karmaşıklık kodun insan zihni tarafından anlaşılma zorluğunu ölçer.
+  remediation: İç içe blokları aç, erken dönüşler (guard clauses) uygula.
+  exceptions_allowed: true
+- id: R-SOLID-010
+  text: Sınıf ≤ 400 satır, metot ≤ 60 satır
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.class-and-method-length-limits
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.04
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Devasa sınıflar ve metotlar SRP ilkesini yıkar.
+  remediation: Sınıfı alt nesnelere, metotları private helper fonksiyonlarına böl.
+  exceptions_allowed: true
+- id: R-SOLID-011
+  text: İç içe koşul derinliği ≤ 3
+  severity: S3
+  layer: L2
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S134
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Derin if/else piramitleri okunabilirliği bozar.
+  remediation: Guard clause veya pattern matching kullanarak akışı düzleştir.
+  exceptions_allowed: true
+- id: R-SOLID-012
+  text: Kalıtım derinliği ≤ 3; kompozisyon tercih edilir
+  severity: S3
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.InheritanceDepthLimit
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/CompositionOverInheritance
+  rationale: Derin kalıtım hiyerarşileri kırılgan taban sınıf problemine (Fragile Base Class) yol açar.
+  remediation: Kalıtım yerine kompozisyon ve arayüz uygulamasını tercih et.
+  exceptions_allowed: true
+- id: R-SOLID-013
+  text: static yardımcı sınıflar iş mantığı barındıramaz
+  severity: S2
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.StaticClassesMustNotContainBusinessLogic
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Statik sınıflardaki iş mantığı mock'lanamaz, global state oluşturur ve test edilebilirliği yok eder.
+  remediation: İş kuralını bir domain servisine veya entity metoduna taşı.
+  exceptions_allowed: true
+- id: R-NET-001
+  text: .Result / .Wait() / GetAwaiter().GetResult() yasak
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.VisualStudio.Threading.Analyzers.VSTHRD002
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-833
+    iso25010:
+    - Reliability/Availability
+  rationale: Senkron bloklama thread-pool starvation'a ve kilitlenmelere (deadlock) yol açar.
+  remediation: Uçtan uca async/await zinciri kur.
+  exceptions_allowed: false
+- id: R-NET-002
+  text: async void yalnızca event handler
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.VisualStudio.Threading.Analyzers.VSTHRD100
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-248
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: async void metotlarda fırlatılan istisnalar yakalanamaz ve tüm process'i anında çökertir.
+  remediation: Geri dönüş tipini 'Task' olarak değiştir.
+  exceptions_allowed: false
+- id: R-NET-003
+  text: Kütüphanede ConfigureAwait(false)
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA2007
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Altyapı ve kütüphane kodlarında synchronization context'i yakalamak gereksiz bağlam geçişlerine yol açar.
+  remediation: Await ifadelerinin sonuna '.ConfigureAwait(false)' ekle.
+  exceptions_allowed: true
+- id: R-NET-004
+  text: CancellationToken imzada ve zincirde
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.cancellation-token-propagation
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-400
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: İptal edilemeyen asenkron işlemler sunucu kaynaklarını tüketir ve timeout durumlarında çalışmaya devam eder.
+  remediation: Metot imzasına 'CancellationToken ct = default' ekle ve tüm alt çağrılara ilet.
+  exceptions_allowed: false
+- id: R-NET-005
+  text: Task dönen metot adı Async ile biter
+  severity: S3
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.VisualStudio.Threading.Analyzers.VSTHRD200
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/Naming
+  rationale: Asenkron metotların açıkça 'Async' sonekine sahip olması API okunabilirliğini artırır.
+  remediation: Metot adının sonuna 'Async' ekle.
+  exceptions_allowed: true
+- id: R-NET-006
+  text: lock içinde await yok
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-await-in-lock
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-833
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: C# monitor lock'ları thread-affinity gerektirir; thread değiştiren await ölümcül kilitlenmeye yol açar.
+  remediation: '''lock'' yerine ''SemaphoreSlim.WaitAsync'' kullan.'
+  exceptions_allowed: false
+- id: R-NET-007
+  text: IDisposable / IAsyncDisposable using ile tüketilir
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA2000
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-404
+    iso25010:
+    - Reliability/ResourceUtilization
+  rationale: Kapatılmayan unmanaged kaynaklar ve socket'ler sızıntılara yol açar.
+  remediation: Nesneyi 'using var' veya 'await using var' ile tanımla.
+  exceptions_allowed: false
+- id: R-NET-008
+  text: ValueTask birden fazla kez await edilemez
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA2012
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/ValueTask
+  rationale: ValueTask tek kullanımlıktır; tekrar await edilmesi tanımsız davranışa ve bellek bozulmasına yol açar.
+  remediation: ValueTask'ı tek sefer await et veya birden çok await için AsTask() çağır.
+  exceptions_allowed: false
+- id: R-NET-009
+  text: Awaitsiz Task dönüşü yok (fire-and-forget)
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.CSharp.CS4014
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-703
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Beklenmeyen ve yakalanmayan arka plan görevleri istisna fırlattığında sessizce başarısız olur.
+  remediation: Görevi 'await' et veya açık bir hata yakalama sarmalayıcısıyla başlat.
+  exceptions_allowed: false
+- id: R-NET-070
+  text: SemaphoreSlim / Mutex finally ile bırakılır
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.semaphore-released-in-finally
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-667
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Hata durumunda serbest bırakılmayan semaforlar uygulamanın kilitlenmesine neden olur.
+  remediation: Release() çağrısını 'finally' bloğu içine al.
+  exceptions_allowed: false
+- id: R-NET-071
+  text: Parallel.ForEach içinde async lambda yok
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.parallel-no-async-lambda
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/Concurrency
+  rationale: Parallel.ForEach async lambda ile çağrıldığında görevlerin tamamlanmasını beklemez ve iş parçacığı taşması yaratır.
+  remediation: '''Parallel.ForEachAsync'' API''sini kullan.'
+  exceptions_allowed: true
+- id: R-NET-072
+  text: ThreadStatic / AsyncLocal gerekçe ister
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.threadstatic-asynclocal-audit
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    cwe:
+    - CWE-362
+    iso25010:
+    - Reliability/Concurrency
+  rationale: Global veya iş parçacığına bağlı durumlar asenkron akışlarda veri sızıntılarına ve yarış durumlarına yol açar.
+  remediation: Durumu parametre veya Scoped DI servisi üzerinden aktar.
+  exceptions_allowed: true
+- id: R-NET-073
+  text: Sınırsız kuyruk / koleksiyon büyümesi yok
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.bounded-collections
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-770
+    iso25010:
+    - Reliability/ResourceUtilization
+  rationale: Sınır konulmamış kuyruklar bellek tükenmesi (OOM) zafiyeti oluşturur.
+  remediation: Kuyruklarda Channel.CreateBounded veya ConcurrentQueue boyut sınırları belirle.
+  exceptions_allowed: true
+- id: R-SEC-001
+  text: Boş catch yerine anlamlı loglama
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.meaningful-exception-logging
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-390
+    iso25010:
+    - Reliability/Analysability
+  rationale: Sessizce yutulan hatalar sistem arızalarının tespit edilmesini imkansız kılar.
+  remediation: Catch bloğuna ILogger ile yapılandırılmış log ekle.
+  exceptions_allowed: true
+- id: R-SEC-002
+  text: Exception türünü değiştirmeden throw e yasağı
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-throw-ex-rethrow
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-703
+    iso25010:
+    - Reliability/Analysability
+  rationale: '''throw ex;'' çağrısı orijinal stack trace bilgisini yok eder.'
+  remediation: Yalnızca 'throw;' yazarak orijinal stack trace'i koru.
+  exceptions_allowed: true
+- id: R-SEC-003
+  text: Ham Exception fırlatılamaz
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-throw-raw-exception
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-397
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Ham 'new Exception()' fırlatmak çağıran tarafın spesifik hata yönetimi yapmasını engeller.
+  remediation: Spesifik bir domain istisnası tanımla veya Result pattern kullan.
+  exceptions_allowed: true
+- id: R-SEC-004
+  text: OperationCanceledException yutulamaz
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.do-not-swallow-operationcanceled
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: İptal istisnasının yutulması sistemin iptal sinyaline duyarsız kalmasına yol açar.
+  remediation: OperationCanceledException'ı yeniden fırlat veya akışı derhal sonlandır.
+  exceptions_allowed: false
+- id: R-SEC-005
+  text: Kritik sistem istisnaları yakalanıp yutulamaz
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.do-not-catch-fatal-exceptions
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-390
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: OutOfMemoryException ve StackOverflowException gibi hatalar yutulamaz.
+  remediation: Spesifik iş istisnalarını yakala, fatal hataları bırak.
+  exceptions_allowed: false
+- id: R-SEC-006
+  text: Hata detayları istemciye sızdırılamaz
+  severity: S2
+  layer: L1
+  owner: codeql
+  enforced_by: opengrep.no-exception-leak-to-client
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-209
+    asvs:
+    - V16
+  rationale: İstemciye dönen hata detayları saldırganlara sistem mimarisi hakkında bilgi verir.
+  remediation: ProblemDetails ve hata kodu ile genel mesaj dön.
+  exceptions_allowed: true
+- id: R-SEC-007
+  text: Boş catch bloğu yok
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-empty-catch
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-390
+    - CWE-703
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Boş catch bloğu yazılımın sessizce bozulmasına ve hata ayıklanamaz hale gelmesine neden olur.
+  remediation: Hatayı logla, ele al veya fırlat.
+  exceptions_allowed: false
+- id: R-SEC-008
+  text: Exception mesajı istemciye dönemez
+  severity: S1
+  layer: L1
+  owner: codeql
+  enforced_by: codeql.csharp.security.ExceptionInformationLeak
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-209
+    asvs:
+    - V16
+  rationale: İç exception mesajları veritabanı şemasını, dosya yollarını ve iç IP'leri ifşa edebilir.
+  remediation: İstemciye yalnızca güvenli, sanitize edilmiş hata mesajı dön.
+  exceptions_allowed: false
+- id: R-NET-080
+  text: catch yalnızca spesifik tip; catch (Exception) yeniden fırlatmalı
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.catch-specific-exception-types
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-396
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Genel Exception yakalamak beklenmeyen sistemik hataları da maskeleyebilir.
+  remediation: Spesifik tipleri yakala; genel Exception yakalanıyorsa loglayıp re-throw yap.
+  exceptions_allowed: true
+- id: R-NET-081
+  text: Exception filtreleri yan etki içeremez
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.exception-filters-no-side-effects
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-703
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: '''when'' koşulunda durum değiştiren metot çağrısı beklenmeyen yan etkilere yol açar.'
+  remediation: Filtrede yalnızca saf sorgu ifadeleri kullan.
+  exceptions_allowed: true
+- id: R-NET-082
+  text: Global exception handler zorunlu, stack trace dışarı sızmaz
+  severity: S1
+  layer: L1
+  owner: archunit
+  enforced_by: ArchUnitNET.GlobalExceptionHandlerRequired
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-209
+    asvs:
+    - V16
+  rationale: İşlenmemiş istisnaların varsayılan ASP.NET sayfasıyla dönmesi iç yapıyı açığa vurur.
+  remediation: UseExceptionHandler middleware'i ile RFC 7807 ProblemDetails dön.
+  exceptions_allowed: false
+- id: R-NET-083
+  text: Güvenlik olayları (auth başarısız, yetki reddi) loglanır
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.security-events-logged
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    asvs:
+    - V16
+    iso21434:
+    - CSMS/AuditLogging
+  rationale: Denetim izi (audit trail) olmayan sistemlerde saldırı girişimleri tespit edilemez.
+  remediation: Güvenlik başarısızlıklarında Warning/Error seviyesinde audit logu bas.
+  exceptions_allowed: false
+- id: R-NET-084
+  text: 'Log injection: kullanıcı girdisi ham loglanamaz'
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.LogInjection
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-117
+    asvs:
+    - V16
+  rationale: Kullanıcı girdisinin filtrelenmeden loglanması sahte log kayıtları basılmasına (log poisoning) yol açar.
+  remediation: Log parametrelerini sanitize et ve yapılandırılmış log şablonu kullan.
+  exceptions_allowed: false
+- id: R-NET-085
+  text: Yapılandırılmış loglama; string interpolasyonu yasak
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.structured-logging-no-interpolation
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Log metinlerinde $"..." kullanımı arama motorlarında indekslemeyi bozar ve performans kaybı yaratır.
+  remediation: 'ILogger şablon formatı kullan: logger.LogInformation("Kullanıcı {UserId}", userId);'
+  exceptions_allowed: true
+- id: R-NET-086
+  text: Log seviyeleri tanımlı politikaya uyar (hata ≠ Information)
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.log-level-convention
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.05
+  standards:
+    asvs:
+    - V16
+  rationale: Hata durumlarının Information olarak loglanması alarm sistemlerini yanıltır.
+  remediation: Hatalarda LogError, beklenmeyen durumlarda LogWarning kullan.
+  exceptions_allowed: true
+- id: R-PII-001
+  text: PII alanı log çağrısına parametre olarak geçemez
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.PiiLoggingSink
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-532
+    - CWE-359
+    asvs:
+    - V14
+    - V16
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: Log altyapısı üçüncü tarafa veya merkezi SIEM sistemine aktığında kişisel veri sözleşme dışı işlenir.
+  remediation: Redaction attribute'u uygula veya alanı hash'le/maskele.
+  exceptions_allowed: false
+- id: R-PII-002
+  text: PII alanı exception mesajına konulamaz
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.PiiInExceptionMessage
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-209
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: İstisna mesajları loglara veya APM sistemlerine maskesiz kaydedilir.
+  remediation: Exception mesajında PII yerine ilgili varlığın GUID veya anonim anahtarını ver.
+  exceptions_allowed: false
+- id: R-PII-003
+  text: PII içeren tipler [SensitiveData] ile işaretli olmalı
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.PiiTypesMustHaveSensitiveDataAttribute
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    kvkk:
+    - m.6 özel nitelikli veri
+  rationale: Hassas veri taşıyan tiplerin işaretlenmemesi otomatik maskeleme mekanizmalarını devre dışı bırakır.
+  remediation: Sınıfa veya ilgili property'e [SensitiveData] özniteliğini ekle.
+  exceptions_allowed: false
+- id: R-PII-004
+  text: PII alanı üçüncü taraf istemci payload'ına maskesiz gidemez
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.PiiInExternalClientPayload
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    kvkk:
+    - m.8/9 veri aktarımı
+    asvs:
+    - V14
+  rationale: Açık rıza veya yasal dayanak olmadan harici API'lere kişisel veri aktarılamaz.
+  remediation: Giden payload'da PII alanlarını maskele veya sadece hash'ini gönder.
+  exceptions_allowed: false
+- id: R-PII-005
+  text: PII alanı cache anahtarında kullanılamaz
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.pii-in-cache-key
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-524
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: Redis veya memory cache anahtarlarında TCKN, e-posta veya telefon kullanılması önbellek ifşasına yol açar.
+  remediation: Cache anahtarı olarak anonimleştirilmiş hash veya dahili ID kullan.
+  exceptions_allowed: true
+- id: R-PII-006
+  text: PII alanı URL query string'inde taşınamaz
+  severity: S1
+  layer: L1
+  owner: codeql
+  enforced_by: opengrep.pii-in-url-query
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-598
+    asvs:
+    - V14
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: Query string parametreleri tarayıcı geçmişinde, web sunucu erişim loglarında ve proxy'lerde düz metin saklanır.
+  remediation: Veriyi POST/PUT gövdesinde (body) şifreli ilet.
+  exceptions_allowed: false
+- id: R-PII-007
+  text: PII içeren tablo/entity için saklama süresi tanımlı
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.kvkk-data-retention-policy
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    kvkk:
+    - m.7 kişisel verilerin silinmesi, yok edilmesi
+  rationale: Süresi dolan kişisel verilerin periyodik olarak anonimleştirilmesi veya imha edilmesi yasal zorunluluktur.
+  remediation: Entity için veri saklama süresi metadata'sı ve imha job'ı tanımla.
+  exceptions_allowed: true
+- id: R-PII-008
+  text: ToString() override'ı PII sızdıramaz
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.tostring-no-pii
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-532
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: Otomatik üretilen ToString() metotları loglarda veya debugger'da PII verisini açığa çıkarır.
+  remediation: ToString() metodunda PII alanlarını maskele veya çıktıdan hariç tut.
+  exceptions_allowed: true
+- id: R-PII-009
+  text: Test fixture'larında gerçek PII kullanılamaz
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-real-pii-in-tests
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    kvkk:
+    - m.4 genel ilkeler
+  rationale: Test kodlarına gerçek TCKN, ad-soyad, plaka veya telefon yazılması veri ihlalidir.
+  remediation: Bogus gibi kütüphaneler ile sahte (synthetic) test verisi üret.
+  exceptions_allowed: false
+- id: R-PII-010
+  text: Analitik/telemetri olaylarına PII eklenemez
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.PiiInTelemetry
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    kvkk:
+    - m.5 işleme şartları
+  rationale: Google Analytics, AppInsights gibi telemetri araçlarına PII gönderilmesi veri aktarım ihlalidir.
+  remediation: Telemetri özelliklerinden PII alanlarını temizle.
+  exceptions_allowed: false
+- id: R-AUTH-001
+  text: Her endpoint [Authorize] veya açık [AllowAnonymous] taşır
+  severity: S1
+  layer: L1
+  owner: archunit
+  enforced_by: ArchUnitNET.EndpointAuthorizationRequired
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    asvs:
+    - V8
+    cwe:
+    - CWE-862
+    owasp_api10:
+    - API10:2023-BOLA
+  rationale: Varsayılan olarak açık bırakılan endpoint'ler yetkisiz erişim açıklarına neden olur.
+  remediation: Controller veya Action üzerine [Authorize] ekle; açık olması gerekiyorsa [AllowAnonymous] ile gerekçe belirt.
+  exceptions_allowed: false
+- id: R-AUTH-002
+  text: '[AllowAnonymous] gerekçe yorumu ister'
+  severity: S2
+  layer: L1
+  owner: opengrep
+  enforced_by: opengrep.allow-anonymous-comment-justification
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    asvs:
+    - V8
+  rationale: Kontrolsüz anonim erişim izinleri güvenlik açığı riski doğurur.
+  remediation: '[AllowAnonymous] özniteliğinin hemen üzerine iş gerekçesini açıklayan yorum ekle.'
+  exceptions_allowed: true
+- id: R-AUTH-003
+  text: Kaynak sahipliği kontrolü olmadan id ile erişim yok
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.idor-resource-ownership-check
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-639
+    owasp_api10:
+    - API10:2023-BOLA
+  rationale: ID ile doğrudan nesneye erişilmesi başka kullanıcıların verilerinin okunmasına/silinmesine yol açar.
+  remediation: Veritabanı sorgusunda oturumdaki UserId ile filtreleme uygula.
+  exceptions_allowed: false
+- id: R-AUTH-004
+  text: JWT doğrulamada ValidateIssuer, ValidateAudience, ValidateLifetime açık
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.jwt-validation-parameters
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    asvs:
+    - V9
+    cwe:
+    - CWE-347
+  rationale: Eksik token doğrulaması sahte veya süresi geçmiş token'ların kabul edilmesine yol açar.
+  remediation: TokenValidationParameters içinde her üç bayrağı da 'true' olarak ayarla.
+  exceptions_allowed: false
+- id: R-AUTH-005
+  text: RequireHttpsMetadata = false yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.jwt-require-https-metadata
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    asvs:
+    - V12
+    cwe:
+    - CWE-319
+  rationale: HTTPS metadata doğrulaması kapatıldığında ortadaki adam (MitM) saldırısı mümkün hale gelir.
+  remediation: RequireHttpsMetadata değerini 'true' yap.
+  exceptions_allowed: false
+- id: R-AUTH-006
+  text: Simetrik JWT anahtarı koddan gelemez
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.HardcodedJwtSecret
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-798
+    asvs:
+    - V9
+  rationale: Kaynak koda yazılan gizli anahtarlar git geçmişinde sızar ve tüm token'ların sahtelenmesine yol açar.
+  remediation: Anahtarı Azure KeyVault veya ortam değişkeninden güvenle oku.
+  exceptions_allowed: false
+- id: R-AUTH-007
+  text: Rol string'i literal olamaz, sabitten gelir
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.roles-from-constants
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: '[Authorize(Roles = "Admin")] gibi magic string''ler yazım hatalarına ve yetki kontrolü zafiyetine yol açar.'
+  remediation: Rol isimlerini Roles.Admin gibi strongly-typed sabitlerden al.
+  exceptions_allowed: true
+- id: R-AUTH-008
+  text: HttpContext.User doğrudan Domain'e taşınamaz
+  severity: S2
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.NoHttpContextUserInDomain
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: HttpContext bir web kavramıdır; Domain katmanına sızması mimari saflığı bozar.
+  remediation: Kullanıcı bilgisini Application katmanında 'ICurrentUser' veya primitive tip olarak aktar.
+  exceptions_allowed: true
+- id: R-AUTH-009
+  text: Antiforgery token durum değiştiren endpoint'lerde
+  severity: S1
+  layer: L1
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S4507
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-352
+    asvs:
+    - V4
+  rationale: POST/PUT/DELETE eylemlerinde CSRF token bulunmaması istemci adına yetkisiz istekler atılmasına izin verir.
+  remediation: '[ValidateAntiForgeryToken] veya [AutoValidateAntiforgeryToken] uygula.'
+  exceptions_allowed: false
+- id: R-INJ-001
+  text: SQL string birleştirme yasak; parametreli sorgu
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.SqlInjection
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-89
+    owasp_top10:
+    - A03:2021
+    asvs:
+    - V1
+  rationale: Dinamik string birleştirme SQL Injection zafiyetine yol açarak veritabanının ele geçirilmesine neden olur.
+  remediation: Parametreli sorgular veya EF Core LINQ ifadeleri kullan.
+  exceptions_allowed: false
+- id: R-INJ-002
+  text: Komut çalıştırma kullanıcı girdisiyle beslenemez
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.CommandInjection
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-78
+    owasp_top10:
+    - A03:2021
+  rationale: Process.Start çağrısına kullanıcı girdisi verilmesi işletim sistemi düzeyinde komut çalıştırma açığı yaratır.
+  remediation: Komut çalıştırmadan kaçın veya girdiyi katı allowlist ile doğrula.
+  exceptions_allowed: false
+- id: R-INJ-003
+  text: 'Path traversal: dosya yolu girdiden türetilemez'
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.PathTraversal
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-22
+    asvs:
+    - V5
+  rationale: Girdiden türetilen dosya yolları '../' saldırılarıyla sistem dosyalarının okunmasına/yazılmasına yol açar.
+  remediation: Path.GetFileName kullan ve güvenli taban dizinin dışına çıkılmadığını doğrula.
+  exceptions_allowed: false
+- id: R-INJ-004
+  text: 'SSRF: dış URL girdiden türetilemez'
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.Ssrf
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-918
+    owasp_api10:
+    - API10:2023
+  rationale: Kullanıcı girdisiyle HTTP isteği başlatılması iç ağın taranmasına ve metadata servislerinin sızdırılmasına yol
+    açar.
+  remediation: Hedef URL'yi katı bir allowlist ile sınırla; özel IP aralıklarına erişimi engelle.
+  exceptions_allowed: false
+- id: R-INJ-005
+  text: 'XXE: XML okuyucuda DTD kapalı'
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.xml-reader-dtd-disabled
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-611
+    owasp_top10:
+    - A05:2021
+  rationale: DTD parsing açık bırakıldığında dosya okuma ve denial-of-service saldırıları yapılabilir.
+  remediation: XmlReaderSettings.DtdProcessing = DtdProcessing.Prohibit yap.
+  exceptions_allowed: false
+- id: R-INJ-006
+  text: TypeNameHandling / polimorfik deserialization yasak
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: opengrep.typenamehandling-prohibited
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-502
+    owasp_top10:
+    - A08:2021
+  rationale: TypeNameHandling.All veya Auto kullanımı uzaktan kod çalıştırmaya (RCE) yol açar.
+  remediation: TypeNameHandling.None kullan; polimorfik deserialization için güvenli System.Text.Json TypeInfoResolver kullan.
+  exceptions_allowed: false
+- id: R-INJ-007
+  text: LDAP/XPath sorgularında kaçış zorunlu
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.LdapXpathInjection
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-90
+    - CWE-643
+  rationale: Kaçış karakterleri kullanılmayan sorgularda kimlik doğrulama bypass edilebilir.
+  remediation: Kullanıcı girdisini LDAP/XPath encoder ile encode et.
+  exceptions_allowed: false
+- id: R-INJ-008
+  text: Regex kullanıcı girdisinden derlenemez (ReDoS)
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.regex-injection-and-redos
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-1333
+  rationale: Kullanıcı kontrolündeki regex desenleri CPU kilitlenmesine ve ReDoS saldırılarına yol açar.
+  remediation: Önceden tanımlı regex deseni kullan ve Regex timeout süresi ver.
+  exceptions_allowed: true
+- id: R-INJ-009
+  text: Her public endpoint girdi modeli doğrulama attribute'u taşır
+  severity: S2
+  layer: L1
+  owner: archunit
+  enforced_by: ArchUnitNET.InputModelValidationRequired
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    asvs:
+    - V2
+  rationale: Doğrulanmamış girdi modelleri geçersiz durumların iş mantığına sızmasına neden olur.
+  remediation: DataAnnotation veya FluentValidation kuralları bağla.
+  exceptions_allowed: true
+- id: R-INJ-010
+  text: Deserialization boyut/derinlik limiti tanımlı
+  severity: S2
+  layer: L2
+  owner: codeql
+  enforced_by: opengrep.deserialization-depth-limit
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-400
+  rationale: Sınırsız JSON derinliği veya boyutu bellek taşmasına yol açar.
+  remediation: JsonSerializerOptions.MaxDepth limitini belirle.
+  exceptions_allowed: true
+- id: R-CRY-001
+  text: MD5, SHA1, DES, RC2, TripleDES yasak
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5350
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-327
+    - CWE-328
+    asvs:
+    - V11
+  rationale: Kırılmış kriptografik algoritmalar verilerin çözülmesine veya çakışma saldırılarına izin verir.
+  remediation: SHA256, SHA512 veya AES-GCM kullan.
+  exceptions_allowed: false
+- id: R-CRY-002
+  text: ECB modu yasak
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5358
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-327
+  rationale: ECB şifreleme modu aynı veri blokları için aynı çıktıyı üretir ve veri yapısını açığa vurur.
+  remediation: CBC veya GCM modu ve rastgele IV kullan.
+  exceptions_allowed: false
+- id: R-CRY-003
+  text: Random kriptografik amaçla kullanılamaz
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5394
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-338
+  rationale: System.Random tahmin edilebilir pseudo-random çıktılar üretir.
+  remediation: RandomNumberGenerator.GetBytes kullan.
+  exceptions_allowed: false
+- id: R-CRY-004
+  text: Parola hash'i PBKDF2/Argon2/bcrypt; ham SHA yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.secure-password-hashing
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-916
+    asvs:
+    - V11
+  rationale: Ham SHA özetleri donanım hızlandırıcılarla dakikalar içinde kırılabilir.
+  remediation: Argon2id veya ASP.NET Core PasswordHasher kullan.
+  exceptions_allowed: false
+- id: R-CRY-005
+  text: Sertifika doğrulaması bypass edilemez
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: opengrep.no-certificate-validation-bypass
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-295
+    asvs:
+    - V12
+  rationale: ServerCertificateCustomValidationCallback = (_, _, _, _) => true MitM saldırılarına davetiye çıkarır.
+  remediation: Sertifika doğrulamasını açık tut ve geçerli CA sertifikaları kullan.
+  exceptions_allowed: false
+- id: R-CRY-006
+  text: TLS sürümü sabitlenmiş ve ≥ 1.2
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.tls-min-version
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-326
+    asvs:
+    - V12
+  rationale: TLS 1.0 ve 1.1 zafiyetli protokollerdir ve modern standartlarda yasaklanmıştır.
+  remediation: Minimum TLS sürümünü Tls12 veya Tls13 olarak sabitle.
+  exceptions_allowed: false
+- id: R-CRY-007
+  text: IV/nonce sabit olamaz
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-static-iv
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-329
+  rationale: Sabit IV kullanımı şifreli metinlerin analiz edilmesini kolaylaştırır.
+  remediation: Her şifreleme işlemi için RandomNumberGenerator ile yeni IV üret.
+  exceptions_allowed: false
+- id: R-CRY-008
+  text: Anahtar malzemesi bellekte string tutulamaz
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.key-material-not-string
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-316
+  rationale: Immutable string nesneleri Garbage Collector temizleyene kadar bellekte düz metin kalır.
+  remediation: byte[] veya SecureString kullan ve işlem bittiğinde CryptographicOperations.ZeroMemory uygula.
+  exceptions_allowed: true
+- id: R-CRY-009
+  text: http:// şemalı URL literal'i yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-http-plain-url
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-319
+    asvs:
+    - V12
+  rationale: Şifrelenmemiş HTTP iletişimi verilerin ağ üzerinde dinlenmesine yol açar.
+  remediation: Tüm URL bağlantılarında 'https://' şemasını kullan.
+  exceptions_allowed: false
+- id: R-NET-010
+  text: Salt okunur sorguda AsNoTracking()
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.readonly-query-asnotracking
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Gereksiz Change Tracker takibi bellek tüketimini ve sorgu süresini katlar.
+  remediation: Salt okuma sorgularının sonuna '.AsNoTracking()' ekle.
+  exceptions_allowed: true
+- id: R-NET-011
+  text: Uygulama katmanında Include yerine projeksiyon
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: opengrep.prefer-select-projection-over-include
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Derin Include zincirleri Cartesian explosion ve aşırı veri çekilmesine yol açar.
+  remediation: Yalnızca gereken kolonları '.Select(dto => new ...)' ile çek.
+  exceptions_allowed: true
+- id: R-NET-012
+  text: Lazy loading kapalı
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-lazy-loading
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-1050
+  rationale: Lazy loading döngüler içinde yüzlerce gizli sorgu atılmasına (N+1 problemi) yol açar.
+  remediation: UseLazyLoadingProxies() çağrısını kaldır ve açık yükleme (eager loading) kullan.
+  exceptions_allowed: false
+- id: R-NET-013
+  text: FromSqlRaw yalnızca parametreli
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.EfFromSqlRawInjection
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-89
+  rationale: FromSqlRaw içine string formatı ile parametre geçmek doğrudan SQL injection açığı oluşturur.
+  remediation: FromSqlInterpolated veya SqlParameter nesneleri kullan.
+  exceptions_allowed: false
+- id: R-NET-014
+  text: DbContext Singleton kaydedilemez
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-singleton-dbcontext
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-543
+  rationale: DbContext iş parçacığı güvenli (thread-safe) değildir; singleton kaydı yarış durumlarına ve veri bozulmasına
+    yol açar.
+  remediation: DbContext'i Scoped olarak kaydet.
+  exceptions_allowed: false
+- id: R-NET-015
+  text: Entity konfigürasyonları IEntityTypeConfiguration ile yapılır
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.entity-type-configuration-classes
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: OnModelCreating içine yüzlerce satır Fluent API gömmek DbContext'i şişirir.
+  remediation: Her entity için bağımsız IEntityTypeConfiguration<T> sınıfı tanımla.
+  exceptions_allowed: true
+- id: R-NET-016
+  text: Senkron SaveChanges yasak
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-sync-savechanges
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Senkron SaveChanges() I/O thread'ini bloke eder.
+  remediation: '''await SaveChangesAsync(ct)'' kullan.'
+  exceptions_allowed: true
+- id: R-NET-017
+  text: Sayfalama olmadan ToListAsync() yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-unpaged-tolist
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-770
+    owasp_api10:
+    - API10:2023
+  rationale: Milyonlarca satırlık tabloda sınırsız ToListAsync() sunucu belleğini patlatır.
+  remediation: Sorguya '.Skip(skip).Take(take)' sayfalama parametreleri ekle.
+  exceptions_allowed: false
+- id: R-NET-018
+  text: Transaction sınırı açıkça tanımlı (UoW dışında SaveChanges yok)
+  severity: S2
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.TransactionBoundaryExplicit
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Reliability/Integrity
+  rationale: Her repo metodunda kontrolsüz SaveChanges çağrılması atomikliği ve ACID güvencesini bozar.
+  remediation: Unit of Work veya Handler seviyesinde tek bir SaveChanges çağır.
+  exceptions_allowed: true
+- id: R-NET-019
+  text: Migration'sız model değişikliği yok
+  severity: S1
+  layer: L3
+  owner: process
+  enforced_by: process.model-changes-require-migrations
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    aspice:
+    - SWE.1-6
+  rationale: Veritabanı modeli ile kod arasındaki uyumsuzluklar çalışma zamanı çökmelerine neden olur.
+  remediation: Model değiştiğinde 'dotnet ef migrations add' ile migration oluştur.
+  exceptions_allowed: false
+- id: R-NET-020
+  text: InMemory database üretim testinde test doubles yerine kullanılamaz
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-inmemory-db-in-integration-tests
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    iso25010:
+    - Reliability/Testability
+  rationale: EF Core InMemory gerçek SQL ilişkisel kısıtlarını ve transaction davranışını desteklemez.
+  remediation: Testcontainers ile gerçek veritabanı konteyneri kullan.
+  exceptions_allowed: true
+- id: R-NET-021
+  text: SQL indeksleme ve yabancı anahtar kısıtları açık tanımlı
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.foreign-keys-and-indexes-explicit
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Eksik indeksler ve kısıtlar veri tutarsızlığına ve yavaş sorgulara yol açar.
+  remediation: HasIndex ve HasForeignKey tanımlarını açıkça yap.
+  exceptions_allowed: true
+- id: R-NET-024
+  text: Optimistic concurrency token'ı olan entity'de güncelleme kontrolü
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.optimistic-concurrency-handling
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-362
+  rationale: Eşzamanlı güncellemelerde kayıp güncelleme (lost update) riskini engellemek için versiyon kontrolü gerekir.
+  remediation: RowVersion veya IsRowVersion token'ı ekle ve DbUpdateConcurrencyException yakala.
+  exceptions_allowed: true
+- id: R-NET-025
+  text: Toplu işlemlerde AddRange/ExecuteUpdate tercih edilir
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.prefer-batch-operations
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Döngü içinde tek tek Add veya Update çağrılması veritabanı round-trip sayısını patlatır.
+  remediation: AddRange veya EF Core 7+ ExecuteUpdateAsync/ExecuteDeleteAsync kullan.
+  exceptions_allowed: true
+- id: R-NET-022
+  text: new HttpClient() yasak; IHttpClientFactory
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-new-httpclient
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-404
+  rationale: new HttpClient() soket tükenmesine (socket exhaustion / TIME_WAIT) yol açar.
+  remediation: IHttpClientFactory veya Typed Client kullan.
+  exceptions_allowed: false
+- id: R-NET-040
+  text: Dış çağrılarda correlation ID taşınır
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.propagate-correlation-id
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    aspice:
+    - SWE.1-6
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Uçtan uca takip kimliği taşınmayan çağrılarda mikroservis hatalarının izi sürülemez.
+  remediation: Dış HTTP veya mesaj başlıklarına 'X-Correlation-Id' ekle.
+  exceptions_allowed: false
+- id: R-NET-041
+  text: Mesaj işleyicide idempotency anahtarı zorunlu
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.message-handler-idempotency
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Aynı mesajın ağ tekrarı nedeniyle birden fazla kez işlenmesi mükerrer bakiye veya sipariş oluşturur.
+  remediation: Idempotency anahtarı ile mesajın daha önce işlenip işlenmediğini doğrula.
+  exceptions_allowed: false
+- id: R-NET-042
+  text: Retry politikası olmayan dış çağrı yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.require-retry-policy
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Geçici ağ kesintilerinde retry yapmayan sistemler gereksiz hata üretir.
+  remediation: Polly retry pipeline bağla.
+  exceptions_allowed: false
+- id: R-NET-043
+  text: Dead-letter işleme yolu tanımlı
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.dead-letter-queue-handling
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Reliability/Recoverability
+  rationale: Hatalı mesajların sessizce kaybolması veri kaybına neden olur.
+  remediation: DLQ dinleyicisi ve yeniden deneme / alarm mekanizması kur.
+  exceptions_allowed: false
+- id: R-NET-044
+  text: Dış servis DTO'su Domain'e sızamaz
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.ExternalDtosMustNotLeakToDomain
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: Dış servis sözleşmeleri değişkendir; Domain modellerinin bunlarla kirletilmesi sistem bütünlüğünü bozar.
+  remediation: Infrastructure katmanında Adapter ile domain modeline dönüştür.
+  exceptions_allowed: false
+- id: R-NET-045
+  text: Timeout'suz HttpClient yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.httpclient-timeout-configured
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-400
+  rationale: Timeout ayarlanmayan dış çağrılar yanıt vermeyen servislerde thread'leri sonsuza dek askıda tutar.
+  remediation: HttpClient.Timeout veya CancellationTokenSource zaman aşımı belirle.
+  exceptions_allowed: false
+- id: R-NET-046
+  text: Circuit breaker tanımlı (Polly pipeline)
+  severity: S2
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.CircuitBreakerConfigured
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Sürekli çöken bir dış servise istek atmaya devam etmek kaynakları tüketir (cascading failure).
+  remediation: Polly Circuit Breaker stratejisini devreye al.
+  exceptions_allowed: true
+- id: R-NET-047
+  text: Retry yalnızca idempotent operasyonlarda
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.retry-only-idempotent-calls
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Idempotent olmayan POST veya para çekme işlemlerinin retry edilmesi çift çekim yapar.
+  remediation: Retry'yi salt okunur veya idempotency token taşıyan çağrılarla sınırla.
+  exceptions_allowed: false
+- id: R-NET-048
+  text: Exponential backoff + jitter zorunlu
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.backoff-with-jitter
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Sabit aralıklı retry çağrıları hedef servisi Thundering Herd problemiyle tamamen çökertir.
+  remediation: Üstel geri çekilme (exponential backoff) ve rastgele gecikme (jitter) ekle.
+  exceptions_allowed: true
+- id: R-NET-049
+  text: Mesaj sözleşmesinde version alanı zorunlu
+  severity: S1
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.MessageContractMustHaveVersionField
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    aspice:
+    - SWE.1-6
+    iso25010:
+    - Compatibility/Replaceability
+  rationale: Versiyon bilgisi olmayan mesajlar şema evrimini ve geriye uyumluluğu imkansız kılar.
+  remediation: Mesaj record tanımına 'int Version' veya 'string SchemaVersion' ekle.
+  exceptions_allowed: false
+- id: R-NET-055
+  text: Mesaj sözleşmesi geriye uyumlu (alan silinemez)
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.message-contract-backward-compatible
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Compatibility/Coexistence
+  rationale: Mevcut tüketicilerin beklediği alanların silinmesi entegrasyon kuyruğunu kilitler.
+  remediation: Alanları silmek yerine [Obsolete] yap veya yeni majör versiyon kontratı yayınla.
+  exceptions_allowed: false
+- id: R-NET-056
+  text: 'Outbox pattern: dış çağrı ile DB yazımı aynı transaction''da olamaz'
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.OutboxPatternEnforced
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Reliability/Integrity
+  rationale: Veritabanı transaction'ı içinde harici HTTP/Bus çağrısı yapmak iki aşamalı commit (2PC) gerektirir ve tutarsızlığa
+    yol açar.
+  remediation: Transactional Outbox pattern uygulayarak mesajları veritabanına yaz ve asenkron yayınla.
+  exceptions_allowed: false
+- id: R-NET-057
+  text: Poison message limiti tanımlı
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.poison-message-handling
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: İşlenemeyen zehirli mesajlar (poison messages) kuyruk işleyicilerini sonsuz döngüye sokar.
+  remediation: Maksimum deneme sayısı belirle ve mesajı Dead Letter Queue'ya taşı.
+  exceptions_allowed: true
+- id: R-NET-058
+  text: Webhook imza doğrulaması zorunlu
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.webhook-signature-verification
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-345
+    asvs:
+    - V4
+  rationale: İmzası doğrulanmayan webhook çağrıları saldırganlar tarafından sahte olaylar tetiklenmesine yol açar.
+  remediation: HMAC-SHA256 imza doğrulama filtresi uygula.
+  exceptions_allowed: false
+- id: R-OBS-001
+  text: Her dış çağrı bir Activity/span açar
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.activity-source-on-external-calls
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Dış çağrıların izlenmemesi dağıtık sistemlerde gecikme ve hata kök neden analizini engeller.
+  remediation: ActivitySource.StartActivity ile OpenTelemetry span'i oluştur.
+  exceptions_allowed: true
+- id: R-OBS-002
+  text: Trace context (W3C traceparent) propagate edilir
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.traceparent-propagation
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: W3C traceparent başlığının kesilmesi izlenebilirlik zincirini koparır.
+  remediation: HttpClient çağrılarında trace context enjeksiyonu yap.
+  exceptions_allowed: false
+- id: R-OBS-003
+  text: Health check endpoint'i tanımlı (liveness + readiness)
+  severity: S2
+  layer: L1
+  owner: archunit
+  enforced_by: ArchUnitNET.HealthChecksConfigured
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/Availability
+  rationale: Kubernetes veya yük dengeleyiciler uygulamanın sağlık durumunu denetleyemezse trafiği arızalı instance'a gönderir.
+  remediation: MapHealthChecks("/health/live") ve MapHealthChecks("/health/ready") ekle.
+  exceptions_allowed: true
+- id: R-OBS-004
+  text: Metrik adları konvansiyona uyar
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.metric-names-convention
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.04
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Standart dışı metrik adları Prometheus / OpenTelemetry panolarında görünmez.
+  remediation: OpenTelemetry semantik konvansiyonlarına (snake_case, birim soneki) uy.
+  exceptions_allowed: true
+- id: R-OBS-005
+  text: Kritik iş akışları için audit kaydı zorunlu
+  severity: S1
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.CriticalOperationsAuditLoggingRequired
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    asvs:
+    - V16
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: Kritik finansal veya idari işlemlerin denetim izi olmadan yapılması sahtecilik ve veri ihlali riskidir.
+  remediation: İş akışına değişmez (tamper-evident) AuditLogger kaydı ekle.
+  exceptions_allowed: false
+- id: R-OBS-006
+  text: Log/metrik/trace'te kardinalite patlaması yok (id etiket olamaz)
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-high-cardinality-metric-tags
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Performance/ResourceUtilization
+  rationale: Metrik etiketlerine GUID veya kullanıcı ID basılması bellek tükenmesine ve APM çökmesine yol açar.
+  remediation: Yüksek kardinaliteli verileri etiket (tag) olarak değil, log veya span attribute olarak kaydet.
+  exceptions_allowed: true
+- id: R-NET-023
+  text: Konfigürasyon IOptions<T> ile okunur
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.strongly-typed-options
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: Kod içinde _configuration["Key"] gezdirilmesi yazım hatalarına ve çalışma zamanı çökmelerine neden olur.
+  remediation: Ayar sınıfı tanımla ve IOptions<T> ile enjekte et.
+  exceptions_allowed: true
+- id: R-NET-031
+  text: PII alanı log çağrısına parametre olarak geçirilemez
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.CompanyFlowModelPiiLog
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    cwe:
+    - CWE-532
+    - CWE-359
+    asvs:
+    - V14
+    - V16
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: Log altyapısı üçüncü tarafa aktığında kişisel veri sözleşme dışı işlenir.
+  remediation: Redaction attribute'u uygula veya alanı hash'le.
+  exceptions_allowed: false
+- id: R-NET-032
+  text: appsettings içinde sır yok
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.gitleaks-secret-detection
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-798
+    asvs:
+    - V13
+  rationale: Yapılandırma dosyalarına yazılan parolalar git geçmişinde kalıcı sızıntı yaratır.
+  remediation: Gizli anahtarları Azure KeyVault, User Secrets veya Environment Variables üzerinden yönet.
+  exceptions_allowed: false
+- id: R-CFG-001
+  text: Startup'ta konfigürasyon doğrulaması (ValidateOnStart)
+  severity: S2
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.OptionsValidationOnStart
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Eksik konfigürasyonlar uygulamanın çalışma anında beklenmedik şekilde patlamasına yol açar.
+  remediation: services.AddOptions<T>().BindConfiguration(...).ValidateDataAnnotations().ValidateOnStart(); kullan.
+  exceptions_allowed: true
+- id: R-CFG-002
+  text: Geliştirme ayarları üretimde etkin olamaz (DeveloperExceptionPage)
+  severity: S1
+  layer: L1
+  owner: opengrep
+  enforced_by: opengrep.no-developerexceptionpage-in-prod
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-489
+    asvs:
+    - V13
+  rationale: DeveloperExceptionPage üretimde iç kodları ve veritabanı sorgularını saldırgana gösterir.
+  remediation: app.UseDeveloperExceptionPage çağrısını 'if (app.Environment.IsDevelopment())' içine al.
+  exceptions_allowed: false
+- id: R-CFG-003
+  text: CORS AllowAnyOrigin + credentials kombinasyonu yasak
+  severity: S1
+  layer: L1
+  owner: opengrep
+  enforced_by: opengrep.cors-no-wildcard-with-credentials
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-942
+    asvs:
+    - V3
+  rationale: Wildcard (*) CORS orijini ile kimlik bilgilerinin (cookie) paylaşılması oturum çalınmasına yol açar.
+  remediation: 'Spesifik güvenilir orijin listesi belirle: WithOrigins("https://domain.com").'
+  exceptions_allowed: false
+- id: R-CFG-004
+  text: Güvenlik başlıkları tanımlı (HSTS, CSP, X-Content-Type-Options)
+  severity: S2
+  layer: L1
+  owner: opengrep
+  enforced_by: opengrep.security-headers-configured
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    asvs:
+    - V3
+    - V12
+  rationale: Eksik HTTP güvenlik başlıkları clickjacking, MIME-sniffing ve SSL-stripping açıklarına zemin hazırlar.
+  remediation: UseHsts(), CSP ve X-Content-Type-Options middleware'lerini ekle.
+  exceptions_allowed: true
+- id: R-CFG-005
+  text: Detaylı hata sayfası üretimde kapalı
+  severity: S1
+  layer: L1
+  owner: opengrep
+  enforced_by: opengrep.no-detailed-errors-in-prod
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-209
+  rationale: Sunucu hata detayları saldırganlara istismar için bilgi sağlar.
+  remediation: Üretimde genel RFC 7807 hata şablonu dön.
+  exceptions_allowed: false
+- id: R-CFG-006
+  text: 'Feature flag''ler merkezî; #if DEBUG iş mantığı barındıramaz'
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-debug-directives-in-business-logic
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Flexibility/Replaceability
+  rationale: '#if DEBUG blokları üretim derlemesinde derlenmediği için test edilmemiş mantık sapmalarına yol açar.'
+  remediation: Merkezi IFeatureManager servisi kullan.
+  exceptions_allowed: true
+- id: R-CFG-007
+  text: Ortam değişkeni adları sabitten gelir
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.env-var-names-from-constants
+  maturity: beta
+  fixture_proven: true
+  fp_rate: 0.04
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: Kodda serbest gezen string ortam değişkeni adları yazım hatalarına neden olur.
+  remediation: Ortam değişkeni adlarını sabit sınıflarda topla.
+  exceptions_allowed: true
+- id: R-NET-050
+  text: DateTime.Now/UtcNow yasak; TimeProvider
+  severity: S1
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.BannedApiAnalyzers
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Doğrudan DateTime.Now çağrısı sistem saatine bağımlılık yaratır, testleri kırılgan ve determinizm dışı yapar.
+  remediation: .NET 8+ TimeProvider soyutlamasını enjekte et.
+  exceptions_allowed: false
+- id: R-NET-051
+  text: Kültüre duyarlı işlemler açık
+  severity: S2
+  layer: L2
+  owner: roslyn
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA1304
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/Globalization
+  rationale: CultureInfo belirtilmeyen string karşılaştırmaları Türkçe karakterler (I/ı, İ/i) nedeniyle hatalı sonuçlar üretir.
+  remediation: StringComparison.OrdinalIgnoreCase veya CultureInfo.InvariantCulture belirt.
+  exceptions_allowed: true
+- id: R-NET-052
+  text: Guid.NewGuid() Domain'de yasak, enjekte edilir
+  severity: S2
+  layer: L3
+  owner: opengrep
+  enforced_by: opengrep.no-guid-newguid-in-domain
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Domain içinde rastgele ID üretimi birim testlerinde tekrar edilebilirlik (reproducibility) sağlar.
+  remediation: IdGenerator arayüzü enjekte et veya entity'ye dışarıdan ver.
+  exceptions_allowed: true
+- id: R-NET-053
+  text: Environment.MachineName, Process.Id Domain'de yasak
+  severity: S2
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.NoEnvironmentInDomain
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: İşletim sistemi ortam değişkenleri Domain saflığını ve platform bağımsızlığını bozar.
+  remediation: Sistem bilgilerini Infrastructure katmanında oku.
+  exceptions_allowed: true
+- id: R-NET-054
+  text: Dosya sistemi ve ağ erişimi Domain'de yasak
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.DomainMustNotAccessFileSystemOrNetwork
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Domain içinde System.IO veya System.Net.Http kullanımı Clean Architecture'ın kalbini yok eder.
+  remediation: I/O operasyonlarını Infrastructure katmanındaki adapter'lara taşı.
+  exceptions_allowed: false
+- id: R-NET-059
+  text: Zaman dilimi açıkça belirtilir (DateTimeOffset tercih)
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.prefer-datetimeoffset
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-1339
+  rationale: DateTime saat dilimi bilgisi taşımaz ve yaz saati uygulamalarında veri kaybına yol açar.
+  remediation: Zaman damgaları için DateTimeOffset kullan.
+  exceptions_allowed: true
+- id: R-TDD-001
+  text: Test coverage oranı hedeflenen eşiğin altında olamaz
+  severity: S1
+  layer: L2
+  owner: stryker
+  enforced_by: stryker.coverage-threshold
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Yetersiz test kapsamı regülasyon ve kalite kapılarını riske atar.
+  remediation: Kritik alanlarda birim ve entegrasyon testlerini artır.
+  exceptions_allowed: false
+- id: R-TDD-002
+  text: Test sınıfları üretim koduna doğrudan referans dışında yan etki oluşturamaz
+  severity: S2
+  layer: L3
+  owner: process
+  enforced_by: ArchUnitNET.TestIsolationIntegrity
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Testlerin üretim veritabanına veya paylaşılan kaynaklara yazması test izolasyonunu bozar.
+  remediation: Test doubles (mock/stub/in-memory) kullan.
+  exceptions_allowed: true
+- id: R-TDD-003
+  text: Assertion'sız test yok
+  severity: S1
+  layer: L2
+  owner: stryker
+  enforced_by: opengrep.test-must-contain-assertion
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Assertion içermeyen testler hiçbir şeyi doğrulamaz, yalnızca sahte yeşil rapor üretir.
+  remediation: Teste en az bir anlamlı Assert ifadesi ekle.
+  exceptions_allowed: false
+- id: R-TDD-004
+  text: Skip gerekçesiz olamaz
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.fact-skip-must-have-reason
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    aspice:
+    - SWE.1-6
+  rationale: Gerekçesiz atlanan testler teknik borcu ve gizli regresyonları maskeler.
+  remediation: '[Fact(Skip = "Gerekçe ve issue bağlantısı")] şeklinde açıkla.'
+  exceptions_allowed: true
+- id: R-TDD-005
+  text: Test diff kalkanı
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.test-diff-shield
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Reliability/Integrity
+  rationale: Üretim kodu değiştiğinde testlerin silinmesi veya beklentilerin hileyle düşürülmesi engellenmelidir.
+  remediation: CI kapısında silinen/gevşetilen testleri blokla.
+  exceptions_allowed: false
+- id: R-TP-001
+  text: Kritik sınıfın testi var
+  severity: S1
+  layer: L2
+  owner: archunit
+  enforced_by: ArchUnitNET.CriticalClassesMustHaveTests
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Domain entity ve application handler sınıflarının otomatik birim testinin bulunması zorunludur.
+  remediation: Sınıf için xUnit test sınıfı oluştur.
+  exceptions_allowed: false
+- id: R-TST-001
+  text: Değişen dosyalarda hayatta kalan mutant = 0
+  severity: S1
+  layer: L2
+  owner: stryker
+  enforced_by: stryker.zero-survived-mutants-on-diff
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Hayatta kalan mutantlar testlerin sınır durumları ve mantıksal hataları yakalamadığını kanıtlar.
+  remediation: Mutantı öldürecek sınır değer (BVA) ve negatif senaryo testleri ekle.
+  exceptions_allowed: false
+- id: R-TST-002
+  text: Yeni testler implementasyon öncesi kırmızı olmalı
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.red-gate-tdd
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Yazılmadan önce geçebilen testler hatalıdır veya yanlış şeyi ölçer (TDD Red-Green döngüsü).
+  remediation: Önce başarısız testi yaz, ardından kodu tamamlayarak yeşile çevir.
+  exceptions_allowed: false
+- id: R-TST-003
+  text: Testte Thread.Sleep yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.no-thread-sleep-in-tests
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Thread.Sleep testleri yavaşlatır ve kırılgan (flaky) hale getirir.
+  remediation: Asenkron koordinasyon veya TaskCompletionSource kullan.
+  exceptions_allowed: false
+- id: R-TST-004
+  text: Test isimlendirmesi Metot_Senaryo_BeklenenSonuç
+  severity: S3
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.test-naming-convention
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.03
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Belirsiz test isimleri hata durumunda neyin çöktüğünün anlaşılmasını engeller.
+  remediation: 'Format: <MetotAdı>_<Durum/Senaryo>_<BeklenenDavranış>.'
+  exceptions_allowed: true
+- id: R-TST-005
+  text: Testler birbirine bağımlı olamaz (sıra bağımsız)
+  severity: S2
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.tests-order-independent
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Reliability/Integrity
+  rationale: Belirli bir sırayla koşması gereken testler paylaşılan durum (shared mutable state) sızıntısı olduğunu gösterir.
+  remediation: Her test için temiz durum kur (AAA - Arrange).
+  exceptions_allowed: true
+- id: R-TST-006
+  text: Integration testleri gerçek dış servise gidemez
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.IntegrationTestsMustNotCallExternalServices
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Testlerin canlı SMS/Ödeme API'lerine istek atması maliyet yaratır, kotaları tüketir ve internet yoksa testi kırar.
+  remediation: WireMock.Net veya Test Doubles kullan.
+  exceptions_allowed: false
+- id: R-TST-007
+  text: Her S1 kuralın pozitif+negatif+boş fixture'ı var
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.s1-fixture-proven-verification
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    aspice:
+    - SWE.1-6
+  rationale: Kural motorunun doğruluğu için kuralı tetikleyen, kuralı tetiklemeyen ve sınır durumdaki fixture testleri şarttır.
+  remediation: Kural için 3 durumlu test fixture dosyasını sağla.
+  exceptions_allowed: false
+- id: R-TST-008
+  text: Kapsam yeni kodda ≥ %80
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.new-code-coverage-gate
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: Yeni eklenen kodların test edilmeden girmesi kod tabanı kalitesini zamanla çürütür.
+  remediation: PR diff kapsamının %80 üzerinde olduğunu doğrula.
+  exceptions_allowed: true
+- id: R-NET-060
+  text: Central Package Management aktif
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.central-package-management
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    slsa:
+    - L2
+  rationale: Projeler arasında paket versiyon uyuşmazlıkları runtime çakışmalarına neden olur.
+  remediation: Directory.Packages.props içinde <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally> aç.
+  exceptions_allowed: false
+- id: R-NET-061
+  text: packages.lock.json + --locked-mode
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.packages-lock-enforced
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    slsa:
+    - L2
+    ssdf:
+    - PS.3
+  rationale: Kilitlenmemiş paket sürümleri transitif bağımlılıklar üzerinden tedarik zinciri saldırılarına açıktır.
+  remediation: <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile> kullan ve CI'da --locked-mode işlet.
+  exceptions_allowed: false
+- id: R-NET-062
+  text: AnalysisLevel sabit sürüm
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.analysis-level-pinned
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: latest derleyici analiz seviyesi beklenmedik zamanlarda yeni uyarılarla build kırabilir.
+  remediation: AnalysisLevel değerini sabit bir .NET sürümüne sabitle.
+  exceptions_allowed: false
+- id: R-NET-063
+  text: TreatWarningsAsErrors yalnızca CI
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.treat-warnings-as-errors-ci
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    msfdg:
+    - FrameworkDesignGuidelines/DeveloperExperience
+  rationale: Geliştirici ortamında anında build kırmak üretkenliği düşürür; CI hattında katı kural işletilmelidir.
+  remediation: <TreatWarningsAsErrors Condition="'$(CI)' == 'true'">true</TreatWarningsAsErrors> ayarla.
+  exceptions_allowed: true
+- id: R-NET-064
+  text: Nullable enable
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.nullable-reference-types-enabled
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-476
+  rationale: Null referans hataları çalışma zamanı çökmelerinin 1 numaralı sebebidir.
+  remediation: <Nullable>enable</Nullable> ayarını tüm projelerde zorunlu tut.
+  exceptions_allowed: false
+- id: R-NET-065
+  text: dotnet list package --vulnerable temiz
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.no-vulnerable-nuget-packages
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-1104
+    owasp_top10:
+    - A06:2021
+  rationale: Bilinen güvenlik zafiyeti olan paketlerin kullanılması sistemin doğrudan istismarına yol açar.
+  remediation: Güvenlik açığı bulunan NuGet paketlerini derhal yamalı sürüme yükselt.
+  exceptions_allowed: false
+- id: R-SUP-001
+  text: SBOM üretilir (CycloneDX/SPDX)
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.generate-sbom
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    ssdf:
+    - PS.3
+    slsa:
+    - L2
+  rationale: Yazılım malzeme listesi (SBOM) olmadan üçüncü taraf bileşenlerin güvenlik envanteri çıkarılamaz.
+  remediation: Build pipeline'ına CycloneDX .NET aracı ekle.
+  exceptions_allowed: false
+- id: R-SUP-002
+  text: Build artefaktı imzalanır
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.sign-build-artifacts
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    slsa:
+    - L3
+  rationale: İmzalanmamış binary dosyaların tahrif edilip edilmediği anlaşılamaz.
+  remediation: Kurumsal kod imzalama sertifikası ile DLL ve paketleri imzala.
+  exceptions_allowed: true
+- id: R-SUP-003
+  text: NuGet kaynağı allowlist; yalnızca onaylı feed
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.nuget-source-allowlist
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-1357
+  rationale: Bilinmeyen public paket kaynakları bağımlılık karmaşası (dependency confusion) saldırılarına açıktır.
+  remediation: nuget.config dosyasında packageSourceMapping yapılandır.
+  exceptions_allowed: false
+- id: R-SUP-004
+  text: Paket imza doğrulaması açık
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.nuget-package-signature-validation
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    slsa:
+    - L2
+  rationale: İmzası geçersiz veya bozuk NuGet paketleri yüklenememelidir.
+  remediation: nuget.config'de signatureValidationMode="require" ayarla.
+  exceptions_allowed: true
+- id: R-SUP-005
+  text: Lisans uyumu denetlenir (kopyaleft engeli)
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.license-compliance-check
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: GPL/AGPL gibi viral kopyaleft lisanslar şirketin tescilli fikri mülkiyetini tehlikeye atar.
+  remediation: Bağımlılık lisanslarını MIT, Apache 2.0, BSD allowlist'i ile denetle.
+  exceptions_allowed: true
+- id: R-SUP-006
+  text: CI action/workflow SHA ile pinlenir, tag ile değil
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.ci-action-pinned-by-sha
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    slsa:
+    - L3
+    cwe:
+    - CWE-829
+  rationale: Mutable tag kullanan GitHub Action'ları zararlı kodla güncellenebilir.
+  remediation: 'Action çağrılarında commit hash kullan: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683.'
+  exceptions_allowed: false
+- id: R-SUP-007
+  text: CI secret'ları job scope'unda; pull_request_target yasak
+  severity: S1
+  layer: L2
+  owner: opengrep
+  enforced_by: opengrep.ci-secrets-and-pr-target
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    cwe:
+    - CWE-269
+  rationale: pull_request_target dış fork'lardan gelen PR'ların gizli anahtarları sızdırmasına yol açar.
+  remediation: Tetikleyici olarak standart 'pull_request' kullan ve secret erişimini kısıtla.
+  exceptions_allowed: false
+- id: R-AUT-001
+  text: Araç tanımlayıcıları (VIN, şasi, motor no) PII sınıfında işlenir
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: codeql.csharp.security.AutomotivePiiTracking
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso21434:
+    - CSMS/DataProtection
+    kvkk:
+    - m.12 veri güvenliği
+  rationale: VIN, şasi ve motor numaraları araç sahibine doğrudan bağlanabildiği için kişisel veri statüsündedir.
+  remediation: Araç kimliklerini [SensitiveData] sınıfına al ve loglarda maskele.
+  exceptions_allowed: false
+- id: R-AUT-002
+  text: Telematik/araç verisi akışı belgelenmiş kanaldan geçer
+  severity: S1
+  layer: L3
+  owner: archunit
+  enforced_by: ArchUnitNET.TelematicsFlowDocumentedChannel
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso21434:
+    - CSMS/CommunicationChannel
+  rationale: Doğrulanmamış kanallardan telematik verisi alınması araç kontrol sistemlerini tehdit eder.
+  remediation: Telematik verisini onaylı API Gateway ve karşılıklı TLS (mTLS) ile kabul et.
+  exceptions_allowed: false
+- id: R-AUT-003
+  text: Güvenlik açığı yönetimi kaydı zorunlu (CVE → issue → düzeltme izi)
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.vulnerability-management-trace
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso21434:
+    - CSMS/VulnerabilityManagement
+    ssdf:
+    - RV.2
+  rationale: UNECE R155 uyumu için tespit edilen her zafiyetin kapatılma ve doğrulama izi bulunmalıdır.
+  remediation: Her CVE düzeltmesinde izlenebilir issue numarası ve test raporu ilişkilendir.
+  exceptions_allowed: false
+- id: R-AUT-004
+  text: Her mimari karar için gerekçe kaydı (ADR)
+  severity: S2
+  layer: L3
+  owner: process
+  enforced_by: process.architecture-decision-records
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    aspice:
+    - SWE.2
+  rationale: Belgelenmemiş mimari kararlar ASPICE denetimlerinde uygunsuzluk yaratır.
+  remediation: docs/adr/ altında standart ADR şablonu ile karar kaydı aç.
+  exceptions_allowed: true
+- id: R-AUT-005
+  text: Gereksinim → kod → test izlenebilirliği
+  severity: S2
+  layer: L2
+  owner: process
+  enforced_by: process.aspice-requirements-traceability
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.01
+  standards:
+    aspice:
+    - SWE.1-6
+  rationale: ASPICE Seviye 2/3 gereği analiz maddesi, kod metodu ve xUnit testi arasında çift yönlü izlenebilirlik olmalıdır.
+  remediation: Kabul kriterlerine ve test metotlarına RTM etiketlerini ekle.
+  exceptions_allowed: true
+- id: R-AUT-006
+  text: Üçüncü taraf bileşen envanteri güncel (SBOM ile eşleşir)
+  severity: S1
+  layer: L2
+  owner: process
+  enforced_by: process.r155-sbom-inventory-match
+  maturity: stable
+  fixture_proven: true
+  fp_rate: 0.0
+  standards:
+    iso21434:
+    - CSMS/ThirdPartyInventory
+  rationale: Üçüncü taraf kütüphanelerin onaylı SBOM envanteriyle eşleşmemesi tip onayını riske atar.
+  remediation: Her release öncesi SBOM envanter kontrolünü doğrula.
+  exceptions_allowed: false

@@ -14,11 +14,11 @@ Bu kural, .NET 10 projesinde **Bootstrap 5.3**, **Razor Views (.cshtml)** ve **K
 
 ## 1. Tasarım Sistemi ve Görsel Bütünlük Kuralları
 
-### 🎨 Kural 1: Satır İçi (Inline) CSS Kesinlikle Yasaktır
+### 🎨 R-UI-001 [S1]: Satır İçi (Inline) CSS Kesinlikle Yasaktır
 - `.cshtml` dosyaları içinde `<div style="color: red; margin-top: 10px;">` gibi keyfi satır içi stiller **asla kullanılamaz**.
 - Tüm stil ve aralıklar Bootstrap 5.3 utility sınıflarından (`text-danger`, `mt-2`, `p-3`, `gap-2`) veya merkezi tasarım CSS dosyasından gelmelidir.
 
-### 🎨 Kural 2: Keyfi Renk ve Piksel Yasağı (Design Tokens)
+### 🎨 R-UI-002 [S2]: Keyfi Renk ve Piksel Yasağı (Design Tokens)
 - Rastgele hex kodları (`#4A90E2`) veya piksel değerleri verilemez.
 - Yalnızca anlamsal (semantic) Bootstrap tasarım token'ları kullanılmalıdır:
   - Birincil Eylemler: `btn-primary`, `text-primary`, `bg-primary-subtle`
@@ -26,7 +26,7 @@ Bu kural, .NET 10 projesinde **Bootstrap 5.3**, **Razor Views (.cshtml)** ve **K
   - Tehlike & Hata: `alert-danger`, `text-danger`, `border-danger`
   - Nötr & Arka Plan: `bg-light`, `text-muted`, `border-secondary-subtle`
 
-### 🎨 Kural 3: WCAG 2.2 AA Erişilebilirlik ve Kontrast Zorunluluğu
+### 🎨 R-UI-003 [S1]: WCAG 2.2 AA Erişilebilirlik ve Kontrast Zorunluluğu
 - Metin ile arka plan arasındaki renk kontrastı **en az 4.5:1** (büyük metinler için en az 3:1) olmak zorundadır.
 - Placeholder asla form etiketi (`<label>`) yerine geçemez. Her form input'unun ilişkili bir `<label asp-for="...">` etiketi olmalıdır.
 - Tüm ikonlu butonlarda ekran okuyucular için `aria-label` veya gizli metin (`<span class="visually-hidden">`) bulunmalıdır.
@@ -35,7 +35,7 @@ Bu kural, .NET 10 projesinde **Bootstrap 5.3**, **Razor Views (.cshtml)** ve **K
 
 ## 2. Razor & ASP.NET Core MVC Kodlama Standartları
 
-### 💻 Kural 4: Modern Tag Helper Kullanımı Şarttır (Legacy Helper Yasağı)
+### 💻 R-UI-004 [S2]: Modern Tag Helper Kullanımı Şarttır (Legacy Helper Yasağı)
 - Eski nesil HTML Helper'lar (`@Html.TextBoxFor()`, `@Html.DropDownListFor()`) yerine her zaman ASP.NET Core Tag Helper'ları kullanılmalıdır:
   - Form: `<form asp-action="Edit" asp-controller="Profile" method="post">`
   - Input: `<input asp-for="Email" class="form-control" />`
@@ -43,10 +43,10 @@ Bu kural, .NET 10 projesinde **Bootstrap 5.3**, **Razor Views (.cshtml)** ve **K
   - Validasyon: `<span asp-validation-for="Email" class="invalid-feedback d-block"></span>`
   - Özet: `<div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>`
 
-### 💻 Kural 5: Sıfır `@Html.Raw()` Toleransı (XSS Koruması)
-- Razor sayfalarında `@Html.Raw()` kullanımı **kesinlikle yasaktır**. Tüm dinamik veriler Razor motorunun otomatik HTML encoding korumasından geçmelidir.
+### 💻 R-UI-005 [S1]: Sıfır `@Html.Raw()` Toleransı (XSS Koruması)
+- Razor sayfalarında `@Html.Raw()` kullanımı **kesinlikle yasaktır**. Tüm dinamik veriler Razor motorunun otomatik HTML encoding korumasından geçmelidir (CWE-79).
 
-### 💻 Kural 6: Monolitik View Yasağı (Zorunlu Parçalama)
+### 💻 R-UI-006 [S2]: Monolitik View Yasağı (Zorunlu Parçalama)
 - 250 satırı aşan veya tekrar eden UI blokları (Örn: ürün kartı, kullanıcı rozeti, yorum listesi) ana sayfada tutulamaz:
   - Küçük şablonlar için: **`Partial View`** (`_UserCard.cshtml`)
   - Kendi veri bağımlılığı olan bileşenler için: **`ViewComponent`** (`NavigationMenuViewComponent`)
@@ -55,7 +55,7 @@ Bu kural, .NET 10 projesinde **Bootstrap 5.3**, **Razor Views (.cshtml)** ve **K
 
 ## 3. Kullanıcı Deneyimi (UX) ve Etkileşim Standartları
 
-### ⚡ Kural 7: 5 Zorunlu Bileşen Durumu (Component States)
+### ⚡ R-UI-007 [S2]: 5 Zorunlu Bileşen Durumu (Component States)
 Arayüzdeki her buton ve etkileşimli eleman şu 5 durumu desteklemelidir:
 1. `Default` (Varsayılan şık görünüm)
 2. `Hover` (Üzerine gelindiğinde belirginleşme)
@@ -63,6 +63,6 @@ Arayüzdeki her buton ve etkileşimli eleman şu 5 durumu desteklemelidir:
 4. `Disabled` (Tıklanamaz durum, opaklık düşüşü)
 5. `Loading` (Tıklandığı anda form gönderilirken buton içine dönen `spinner-border-sm` eklenmesi ve butonun `disabled` olması).
 
-### ⚡ Kural 8: Boş Durum (Empty State) Tasarımı
+### ⚡ R-UI-008 [S2]: Boş Durum (Empty State) Tasarımı
 - Veri bulunmayan listelerde (Örn: *"Henüz ürün eklenmemiş"*) boş ve beyaz bir sayfa bırakılamaz.
 - Ortalanmış bir illüstrasyon/ikon, açıklayıcı bir metin ve kullanıcıyı harekete geçirecek birincil eylem butonu içeren bir **Empty State** kartı gösterilmelidir.

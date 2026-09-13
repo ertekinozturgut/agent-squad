@@ -1,33 +1,58 @@
-# 🤖 Agent Squad
+# 🤖 Agent Squad v2 — UDAP .NET Standart İzlenebilirliğiyle
 
 > **Antigravity AI IDE için 8 Kişilik Otonom Yazılım Geliştirme Squad'ı**  
-> Clean Architecture, Domain-Driven Design (DDD), 23 GoF Tasarım Kalıbı, OWASP Top 10 Güvenlik Standartları ve Katı El Sıkışma (Handoff) Protokolleri.
+> Clean Architecture, Domain-Driven Design (DDD), 23 GoF Tasarım Kalıbı, **175 UDAP .NET Kuralı**, **11 Uluslararası & Sektörel Standart**, **5 Motorlu Analiz Hattı** ve **%100 Saf .NET / C# Yerel Araç Entegrasyonu (Sıfır Python Bağımlılığı)**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform: Antigravity](https://img.shields.io/badge/Platform-Antigravity%20AI-purple.svg)](https://github.com/ertekinozturgut/agent-squad)
 [![Tech: .NET 10 / C# 14](https://img.shields.io/badge/.NET-10.0-512BD4.svg)](https://dotnet.microsoft.com/)
-[![Architecture: Clean Architecture](https://img.shields.io/badge/Architecture-Clean%20%26%20DDD-success.svg)](https://github.com/ertekinozturgut/agent-squad)
-[![Design Patterns: 23 GoF](https://img.shields.io/badge/Design%20Patterns-Full%2023%20GoF%20%2B%20Enterprise-orange.svg)](.agents/skills/backend-engineer/SKILL.md)
-[![Security: OWASP ASVS](https://img.shields.io/badge/Security-OWASP%20ASVS%20Level%202-red.svg)](.agents/rules/03-security-guardrails.md)
+[![Rules: 175 UDAP Rules](https://img.shields.io/badge/Rules-175%20UDAP%20Rules%20(v2)-blueviolet.svg)](.agents/rules_registry.yaml)
+[![Standards: 11 Standard Traceability](https://img.shields.io/badge/Standards-11%20Standards%20(ASVS%205.0%20%7C%2025010%20%7C%2021434)-darkgreen.svg)](docs/TRACEABILITY_MATRIX.md)
+[![Pipeline: 5 Engine](https://img.shields.io/badge/Engines-ArchUnit%20%7C%20Opengrep%20%7C%20CodeQL%20%7C%20Stryker%20%7C%20Roslyn-orange.svg)](tests/ArchitectureTests/)
 [![Quality: Zero Warnings](https://img.shields.io/badge/Quality-Zero%20Compiler%20Warnings-brightgreen.svg)](Directory.Build.props)
+[![Mutations: Stryker 0 Survived](https://img.shields.io/badge/Mutation%20Testing-0%20Survived%20Mutants-success.svg)](stryker-config.json)
 
 ---
 
 ## 🌟 Genel Bakış
 
-**Agent Squad**, tek bir yapay zeka modeline tüm yazılım geliştirme sürecini yüklemek yerine; endüstri standardı kanonik literatürlerle donatılmış **8 bağımsız uzman persona**, **5 bağlayıcı anayasal kural**, **tüm 23 Gang of Four (GoF) Tasarım Kalıbı** ve merkezi bir **Görev Durum Makinesi (`tasks.json` + `tasks.schema.json`)** ile çalışan kurumsal seviyede bir yapay zeka yazılım fabrikası mimarisidir.
+**Agent Squad v2**, tek bir yapay zeka modeline tüm yazılım geliştirme sürecini yüklemek yerine; endüstri standardı kanonik literatürlerle donatılmış **8 bağımsız uzman persona**, **6 bağlayıcı anayasal kural**, **175 kurallı merkezi kural kataloğu (`rules_registry.yaml`)** ve **5 motorlu yerel denetim hattı** ile çalışan kurumsal seviyede bir yapay zeka yazılım fabrikası mimarisidir.
 
 ### Temel Felsefe
-- **Uzmanlaşma:** Her persona sadece kendi disiplininde (Analiz, Mimari, Kodlama, Güvenlik, Test) dünyanın en prestijli literatürlerine (BABOK, Uncle Bob, Evans, GoF, OWASP, Meszaros) dayanarak çalışır.
-- **Karşılıklı Denetim (Checks & Balances):** Hiçbir geliştirici kendi kodunu onaylayamaz; QA ve Security kapılarından geçmeyen tek bir satır kod ana dala giremez.
-- **WIP = 1 (Work-in-Progress):** Çoklu görev karmaşası ve bağlam kaybı engellenir; ekip tek seferde yalnızca tek bir atomik göreve odaklanır.
-- **Tasarım Kalıpları Zorunluluğu:** Spagetti kod ve kontrolsüz switch/if-else dallanmaları yasaktır; her gereksinim için kanonik bir GoF/Enterprise deseni uygulanır.
+- **Uzmanlaşma:** Her persona sadece kendi disiplininde (Analiz, Mimari, Kodlama, Güvenlik, Test) dünyanın en prestijli literatürlerine dayanarak çalışır.
+- **Standart İzlenebilirliği:** Her kural en az bir uluslararası veya sektörel standarda bağlanır (ASVS 5.0, ISO 25010, CWE, UNECE R155 vb.).
+- **5 Motorlu Otomasyon Hattı:** ArchUnitNET, Opengrep, CodeQL, Stryker ve Roslyn derleyici analizörleri ile çok katmanlı savunma.
+- **Saf .NET / Sıfır Python:** Dış script bağımlılığı yoktur; her kontrol aracı doğrudan kendi resmi konfigürasyonlarıyla (`tests/`, `.opengrep/`, `.codeql/`, `.editorconfig`, `stryker-config.json`, `Directory.Build.props`) çalışır.
+- **WIP = 1 (Work-in-Progress):** Ekip tek seferde yalnızca tek bir atomik göreve odaklanır; çoklu görev karmaşası engellenir.
+- **Kural Şiddet Modeli:** S1 (Build kırar, tolerans yok), S2 (PR bloklar, gerekçeli `@UdapSuppress` şart), S3 (Uyarı).
 
 ---
 
-## 🔄 Squad El Sıkışma (Handoff) Zinciri ve Durum Makinesi
+## 🏛️ 11 Referans Standart ve Kapsam Gerçeği
 
-Tüm görevler `tasks.json` üzerindeki durum makinesi doğrultusunda aşağıdaki 5 aşamalı katı el sıkışma zincirini izler:
+| Kısaltma | Standart | Kapsam ve Kullanım Amacı |
+|---|---|---|
+| **ASVS** | OWASP Application Security Verification Standard v5.0.0 (Mayıs 2025, 17 Bölüm, ~350 Gereksinim) | Güvenlik gereksinimlerinin birincil kaynağı (L1/L2/L3) |
+| **CWE** | MITRE Common Weakness Enumeration | Zafiyet sınıfı kimliği |
+| **A10** | OWASP Top 10:2021 | Yönetici raporlaması ve web riskleri |
+| **API10** | OWASP API Security Top 10:2023 | Entegrasyon ve API yüzeyi |
+| **25010** | ISO/IEC 25010:2023 (9 Karakteristik) | Ürün kalite modeli (Modularity, Performance, Reliability, Security vb.) |
+| **SSDF** | NIST SP 800-218 Secure Software Development Framework | Güvenli süreç kapıları |
+| **SLSA** | SLSA v1.0 Build Levels (L2/L3) | Tedarik zinciri güvenliği ve build bütünlüğü |
+| **21434** | ISO/SAE 21434 + UNECE R155 (CSMS) | Otomotiv siber güvenlik yönetim sistemi |
+| **ASPICE** | Automotive SPICE v4.0 (SWE.1 - SWE.6) | Süreç izlenebilirliği (Gereksinim ➔ Kod ➔ Test) |
+| **KVKK** | 6698 Sayılı KVKK / GDPR | Kişisel veri işleme, aktarma ve saklama ilkeleri |
+| **MSFDG** | Microsoft Framework Design Guidelines | C# ve .NET API hijyeni |
+
+> [!IMPORTANT]
+> **Kapsam Gerçeği (Reality Check):**
+> ASVS'in yaklaşık **%55'i** statik analiz araçlarıyla otomatik doğrulanabilir. İş mantığı doğrulaması, dinamik oturum davranışı ve yetkilendirme kararlarının mantıksal doğruluğu Solution Architect ve QA Tester incelemesi gerektirir. Bağımsız denetim kanıtları için: [docs/TRACEABILITY_MATRIX.md](docs/TRACEABILITY_MATRIX.md).
+
+---
+
+## 🔄 Squad El Sıkışma Zinciri ve Görev Durum Makinesi
+
+Tüm görevler `tasks.json` üzerindeki durum makinesi doğrultusunda şu 5 aşamalı zinciri takip eder:
 
 ```text
        ┌───────────┐
@@ -35,17 +60,17 @@ Tüm görevler `tasks.json` üzerindeki durum makinesi doğrultusunda aşağıda
        └─────┬─────┘
              │
              ▼
-   [Aşama 1: Kapsam & Analiz] ────────► İş Analisti (BABOK v3 & JTBD & 4 Kademeli Gherkin)
+   [Aşama 1: Kapsam & Analiz] ────────► İş Analisti (BABOK v3 & JTBD & PII Sınıflandırması)
              │
              ▼
-   [Aşama 2: Mimari & UX Şartnamesi] ─► Çözüm Mimarı (Clean Arch/DDD/GoF) & UI/UX Tasarımcısı (Norman/Krug)
+   [Aşama 2: Mimari & UX Şartnamesi] ─► Çözüm Mimarı (contract.yaml / GoF / ADR) & UI/UX Tasarımcısı
              │
              ├──────────────────────────► 🚪 [DoR Giriş Kapısı Onayı]
              ▼
-   [Aşama 3: Geliştirme] ─────────────► Backend Engineer (.NET 10/Clean Code/23 GoF) & Razor Specialist
+   [Aşama 3: Geliştirme] ─────────────► Backend Engineer (.NET 10 / TimeProvider) & Razor Specialist
              │
              ▼
-   [Aşama 4: Kalite & Güvenlik] ──────► QA Tester (xUnit/Adversarial) & Security Reviewer (OWASP/ASVS)
+   [Aşama 4: Kalite & Güvenlik] ──────► QA Tester (Stryker 0 Mutant) & Security Reviewer (5-Engine Guard)
              │                          │
              │                          ├────── (Red / Revizyon Gerekli) ─────► ┌───────────────────┐
              │                          │                                       │ changes_requested │
@@ -63,93 +88,78 @@ Tüm görevler `tasks.json` üzerindeki durum makinesi doğrultusunda aşağıda
 
 ## 🧠 8 Personanın Uzmanlık Alanları
 
-| Persona | Rol & Uzmanlık | Dayandığı Kanonik Literatür | Temel Çıktı & Sorumluluk |
+| Persona | Rol & Uzmanlık | Dayandığı Standart & Kanon | Temel Çıktı & Sorumluluk |
 | :--- | :--- | :--- | :--- |
-| **`project-manager`** | Orkestratör & Akış Yöneticisi | PMBOK 7th, Scrum Guide, Accelerate (DORA) | `tasks.json` durum makinesi, WIP=1, revizyon döngüsü (`changes_requested`, `blocked`) ve DoR/DoD kontrolleri. |
-| **`business-analyst`** | Değer & Çelişki Dedektörü | BABOK v3, Competing Against Luck (JTBD), Specification by Example | 4 kademeli Gherkin kabul kriterleri (`Happy`, `Validation`, `Conflict`, `Security`), Veri Sözlüğü ve sürtünmesiz akış. |
-| **`solution-architect`** | Clean Architecture & DDD Mimarı | Clean Architecture (Uncle Bob), DDD (Eric Evans), Design Patterns (GoF) | Zengin Domain modelleri, Result sözleşmesi, katman sınırları ve Kurumsal Tasarım Kalıpları seçim rehberi. |
-| **`backend-engineer`** | .NET 10 & 23 GoF Kalıbı Ustası | Clean Code (Uncle Bob), C# in Depth, GoF, Concurrency Cookbook | İnce Controller, AsNoTracking, 23 GoF Deseni, Result deseni, Guard Clauses, max 25 satır metotlar. |
-| **`uiux-designer`** | UX & Tasarım Sistemi Yöneticisi | Design of Everyday Things, Don't Make Me Think, Refactoring UI, WCAG AA | Bootstrap 5.3 görsel hiyerarşi, 5 kademeli durum matrisi (`Hover`, `Focus`, `Loading` vb.), sıfır satır içi CSS. |
-| **`razor-specialist`** | Modern Razor & Frontend Uzmanı | Bootstrap 5.3, ASP.NET Core Tag Helpers, HTML Living Standard | Modern `.cshtml`, double-submit engelleme, Partial vs ViewComponent, hem jQuery hem Vanilla JS validasyonu. |
-| **`qa-tester`** | Çift Yönlü Test Avcısı | xUnit Test Patterns (Meszaros), Explore It!, ISTQB Technical | Gereksinim matrisi (RTM), sınır değer saldırıları (BVA), tasarım kalıbı testleri, sıfır veri kaybı denetimi. |
-| **`security-reviewer`** | Siber Güvenlik & Kalite Denetçisi | OWASP Top 10 (2025), OWASP ASVS v4.0 Level 2, SEI CERT C# | CSRF, XSS, IDOR, Mass-Assignment, deadlock, bellek sızıntısı ve SonarAnalyzer / Semgrep denetimi. |
+| **`project-manager`** | Orkestratör & Akış Yöneticisi | PMBOK 7th, Scrum, DORA, 8 Dalga Protokolü | `tasks.json`, WIP=1, DoR/DoD kapı onayları ve 8 dalgalı devreye alma yönetimi. |
+| **`business-analyst`** | Değer & Çelişki Dedektörü | BABOK v3, JTBD, KVKK m.4-12, ISO 21434 | 4 kademeli Gherkin (`Happy`, `Validation`, `Conflict`, `Security`), PII Veri Sözlüğü. |
+| **`solution-architect`** | Clean Architecture & DDD Mimarı | Clean Arch, DDD, GoF, ISO 25010, ASPICE SWE.2 | `.agents/contract.yaml` sözleşmesi, ArchUnitNET testleri, ADR kayıtları, Outbox pattern. |
+| **`backend-engineer`** | .NET 10 & 23 GoF Kalıbı Ustası | Clean Code, C# 14, 23 GoF, Concurrency Cookbook | İnce Controller, AsNoTracking, TimeProvider, CancellationToken, Polly resilience. |
+| **`uiux-designer`** | UX & Tasarım Sistemi Yöneticisi | Don Norman, Steve Krug, Refactoring UI, WCAG AA | Bootstrap 5.3 grid, 5 bileşen durumu (`Hover`, `Focus`, `Loading` vb.), sıfır inline CSS. |
+| **`razor-specialist`** | Modern Razor & Frontend Uzmanı | ASP.NET Core Tag Helpers, HTML Living Standard | Modern `.cshtml`, double-submit engelleme, Partial View / ViewComponent ayrımı. |
+| **`qa-tester`** | Test & Mutasyon Avcısı | xUnit Patterns, Stryker .NET, ISTQB, ASPICE | Stryker mutasyon testi (0 hayatta kalan mutant - R-TST-001), TDD RED_GATE, RTM. |
+| **`security-reviewer`** | Siber Güvenlik & Kalite Baş Denetçisi | ASVS v5.0 (L1-L3), OWASP Top 10, CWE, KVKK | 5 motorlu analiz (ArchUnit, Opengrep, CodeQL, Stryker, Roslyn), S1/S2 kapı onayı. |
 
 ---
 
-## 🏛️ Kapsamlı Tasarım Kalıpları Kataloğu (Full GoF & Enterprise)
+## 🛠️ 5 Motorlu Yerel Denetim Hattı ve Çalıştırma
 
-`backend-engineer` ve `solution-architect` el kitapları, aşağıdaki **23 Gang of Four (GoF)** ve **4 Kurumsal .NET** tasarım kalıbını somut C# 14 / .NET 10 Clean Architecture kodlarıyla içerir:
+Tüm denetim araçları doğrudan ilgili konfigürasyon dosyalarına bağlanmıştır ve yerel CLI komutlarıyla çalışır:
 
-| Kategori | Tasarım Kalıpları | Kullanım Alanı & Çözüm |
-| :--- | :--- | :--- |
-| **Yaratımsal (Creational)** | **Factory Method, Abstract Factory, Builder, Prototype, Singleton** | Varlık invariyantlarının korunması (`Order.Create`), test builder'ları, immutable konfigürasyon kopyalama ve DI singleton yönetimi. |
-| **Yapısal (Structural)** | **Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy** | Dış API izolasyonu (Twilio/Stripe), cross-cutting caching/logging, alt sistem orkestrasyonu, bellek optimizasyonu ve yetki denetimi. |
-| **Davranışsal (Behavioral)** | **Strategy, Chain of Responsibility, Command, Interpreter, Iterator, Mediator, Memento, Observer, State, Template Method, Visitor** | Dinamik iş kuralı dallanması, validasyon boru hatları, CQRS komutları, büyük veri akışları (`IAsyncEnumerable`), yaşam döngüsü durumları ve domain event'ler. |
-| **Kurumsal .NET (Enterprise)** | **Specification, Result (ROP), Unit of Work & Repository, Strongly-Typed Options** | Tekrar kullanılabilir LINQ sorgu kriterleri, exceptionsız akış yönetimi, ACID işlem sınırları ve tip güvenli `IOptions<T>` yapılandırması. |
-
----
-
-## 📜 5 Bağlayıcı Anayasa Kuralı (`.agents/rules/`)
-
-1. **`01-squad-handoff-protocol.md`:** Görev döngüsü, rol geçişleri, DoR/DoD kapıları, `changes_requested` revizyon mekanizması ve WIP=1 akış anayasası.
-2. **`02-architecture-invariants.md`:** Core katmanının sıfır dış bağımlılığı, ViewModel zorunluluğu, ince controller'lar, asenkron standartlar ve Tasarım Kalıpları değişmezleri.
-3. **`03-security-guardrails.md`:** CSRF token zorunluluğu, sıfır `@Html.Raw()`, parametreli SQL ve derleyici seviyesinde sıfır uyarı politikası.
-4. **`04-ui-design-invariants.md`:** Sıfır inline CSS, WCAG 2.2 AA kontrastı (4.5:1), 5 zorunlu bileşen durumu ve responsive empty state standartları.
-5. **`05-backend-development-clean-code-standards.md`:** Fonksiyon yönetimi (max 25 satır, max 3 parametre, guard clauses), sınıf kapsamı (max 300 satır, Demeter yasası, Tell Don't Ask) ve OOP/Tasarım Kalıpları kuralları.
+| Araç / Motor | Doğrudan Yapılandırma Dosyası | Çalıştırma Komutu | Kapsam ve Rol |
+|---|---|---|---|
+| **ArchUnitNET** | [`tests/ArchitectureTests/`](tests/ArchitectureTests/) | `dotnet test tests/ArchitectureTests/` | Katman sınırları, dikey dilim izolasyonu, endpoint yetki ve PII marker testleri (32 kural). |
+| **Opengrep** | [`.opengrep/rules.yaml`](.opengrep/rules.yaml) | `opengrep scan --config .opengrep/rules.yaml` | Sintaktik hijyen; .Result, async/await, HttpClient, lock, yapılandırılmış loglama (71 kural). |
+| **CodeQL** | [`.codeql/models/company-flow-model.yml`](.codeql/models/) | `codeql database analyze --model-packs .codeql/models/` | Derin veri akışı (taint tracking); SQLi, RCE, SSRF, path traversal, PII sızıntı takibi (19 kural). |
+| **Stryker .NET** | [`stryker-config.json`](stryker-config.json) | `dotnet stryker --since:origin/main` | Mutasyon test kapısı; değişen dosyalarda 0 hayatta kalan mutant (R-TST-001) (3 kural). |
+| **Roslyn Analizörleri**| [`Directory.Build.props`](Directory.Build.props), [`BannedSymbols.txt`](BannedSymbols.txt), [`.editorconfig`](.editorconfig) | `dotnet build` | `BannedSymbols.txt` (TimeProvider), SonarAnalyzer, VSTHRD ve sıfır uyarı kuralı (22 kural). |
+| **Süreç Kapıları** | [`nuget.config`](nuget.config), [`.agents/contract.yaml`](.agents/contract.yaml), [docs/](docs/) | CI / PR Pipeline | Lockfile, SBOM, NuGet allowlist, ADR, ASPICE izlenebilirliği (28 kural). |
 
 ---
 
-## 🛡️ Otomatik Analiz ve Denetim Motorları (100% Ücretsiz & Açık Kaynak)
+## 📜 6 Bağlayıcı Anayasa Kuralı (`.agents/rules/`)
 
-Agent Squad, personeların manuel incelemesini desteklemek için sektör lideri iki otomatik analiz motoruyla tam entegre çalışır:
-
-### 1. Semgrep MCP Server (OWASP Top 10 Güvenlik Taraması)
-* **Araç:** [`semgrep/mcp`](https://github.com/semgrep/semgrep/tree/main/src/semgrep/mcp)
-* **Kullanım:** Hazır şablon `mcp_config.template.json` dosyası `mcp_config.json` olarak eklenir. `security-reviewer` personası `git diff` ile değişen dosyalardaki SQL Injection, XSS, CSRF, IDOR ve Hardcoded Secrets açıklarını otomatik tarar.
-```json
-{
-  "mcpServers": {
-    "semgrep": {
-      "command": "uvx",
-      "args": ["semgrep-mcp", "-t", "stdio"]
-    }
-  }
-}
-```
-
-### 2. SonarAnalyzer.CSharp & Roslynator (Clean Code & Zero Warnings)
-* **Araç:** SonarSource'un resmi Roslyn tabanlı C# kural motoru.
-* **Kullanım:** Projenin kök dizinindeki `Directory.Build.props` ile harici bir SonarQube sunucusu gerekmeksizin tüm Sonar Clean Code kurallarını (`Sxxxx`) derleyici zamanında çalıştırır.
-* **Katı Politika:** `<TreatWarningsAsErrors>true</TreatWarningsAsErrors>` devrede olduğu için en ufak bir derleyici veya kod kokusu uyarısında derleme başarısız sayılır.
+1. **`01-squad-handoff-protocol.md`:** Görev döngüsü, S1/S2/S3 şiddet kapısı, DoR/DoD kontrolleri ve 8 dalgalı devreye alma sırası.
+2. **`02-architecture-invariants.md`:** Katman sınırları (R-ARCH), dikey dilim izolasyonu (R-MOD), TimeProvider ve pure domain kuralları.
+3. **`03-security-guardrails.md`:** ASVS v5.0, KVKK/PII sızıntı koruması, CSRF/XSS, IDOR, SQLi ve kriptografi hijyeni.
+4. **`04-ui-design-invariants.md`:** Sıfır inline CSS, WCAG AA erişilebilirlik, 5 bileşen durumu ve empty state tasarımı.
+5. **`05-backend-development-clean-code-standards.md`:** Fonksiyon sınırları (max 60 satır, max 3 parametre, karmaşıklık $\le 10$), asenkron kurallar, EF Core sayfalama ve Polly resilience.
+6. **`06-standard-traceability-and-compliance.md`:** 11 standardın genel çerçevesi, %55 statik ASVS kapsam gerçeği ve ASPICE/R155 denetim kanıtları.
 
 ---
 
 ## 🚀 Projelerinizde Nasıl Kullanılır?
 
-Agent Squad mimarisini herhangi bir yazılım projesinde devreye almak son derece basittir:
-
-### 1. Dizin Yapısını Kopyalayın
-Bu depodaki `.agents/` klasörünü hedef projenizin kök dizinine yapıştırın:
+### 1. Dizin Yapısını ve Yapılandırmaları Kopyalayın
 ```bash
-cp -r .agents/ /path/to/your/project/.agents/
+cp -r .agents/ tests/ .opengrep/ .codeql/ docs/ /path/to/your/project/
+cp Directory.Build.props BannedSymbols.txt .editorconfig nuget.config stryker-config.json /path/to/your/project/
 ```
 
-### 2. Görev Kuyruğunu ve Şemasını Başlatın
-`tasks.template.json` ve `tasks.schema.json` dosyalarını projenizin kök dizinine kopyalayın ve hedeflerinizi atomik görevler olarak tanımlayın:
+### 2. Görev Kuyruğunu Başlatın
 ```bash
 cp tasks.template.json /path/to/your/project/tasks.json
 cp tasks.schema.json /path/to/your/project/tasks.schema.json
 ```
-*(İsteğe bağlı)* Semgrep MCP güvenlik tarayıcısını etkinleştirmek için:
+
+### 3. Denetim Araçlarını Doğrudan Çalıştırın (Saf .NET)
 ```bash
-cp mcp_config.template.json /path/to/your/project/mcp_config.json
+# 1. Derleme, Roslyn ve BannedApi (TimeProvider vb.) kontrolü:
+dotnet build
+
+# 2. Mimari testleri (ArchUnitNET):
+dotnet test tests/ArchitectureTests/Company.ArchitectureTests.csproj
+
+# 3. Mutasyon testi (Stryker 0 mutant):
+dotnet stryker --since:origin/main
+
+# 4. Güvenlik ve sözdizimi taraması (Opengrep):
+opengrep scan --config .opengrep/rules.yaml
 ```
 
-### 3. Antigravity AI IDE ile Geliştirmeye Başlayın
-Antigravity AI IDE projenizi açtığında:
-- `.agents/rules/` altındaki anayasal kuralları arka planda sürekli aktif tutar.
-- `.agents/skills/` altındaki mesleki el kitaplarını ilgili persona sahneye çıktığında otomatik olarak devreye alır.
-- `tasks.json` dosyasını `tasks.schema.json` üzerinden doğrular; görevlerin DoR/DoD kapılarını ve revizyon döngülerini yönetir.
+### 4. Antigravity AI IDE ile Geliştirmeye Başlayın
+- Antigravity AI IDE `.agents/rules/` altındaki 6 anayasayı sürekli aktif tutar.
+- Persona el kitapları (`SKILL.md`) roller değiştikçe otomatik devreye girer.
+- `tasks.json` durum makinesi DoR/DoD kapılarını ve S1/S2 denetimlerini otonom yönetir.
 
 ---
 

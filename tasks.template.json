@@ -32,7 +32,21 @@
       "designPatternsUsed": [],
       "uiDesignTokens": [],
       "testsWritten": [],
-      "securityAuditPassed": false
+      "securityAuditPassed": false,
+      "mutationScore": 100.0,
+      "standardTraceability": [
+        "ASVS-V14",
+        "ISO25010-Security",
+        "KVKK-m12"
+      ],
+      "toolAuditResults": {
+        "archunit": "pass",
+        "opengrep": "pass",
+        "codeql": "pass",
+        "stryker": "pass",
+        "roslyn": "pass"
+      },
+      "suppressions": []
     }
   }
 ]

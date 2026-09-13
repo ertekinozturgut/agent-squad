@@ -1,0 +1,84 @@
+version: 2
+
+layers:
+  domain:         { paths: ["src/*/Domain/**"],         may_depend_on: [] }
+  application:    { paths: ["src/*/Application/**"],    may_depend_on: [domain] }
+  infrastructure: { paths: ["src/*/Infrastructure/**"], may_depend_on: [domain, application] }
+  api:            { paths: ["src/*/Api/**"],            may_depend_on: [application, domain] }
+
+features: ["Orders", "Customers", "Vehicles", "Campaigns"]
+shared_kernel: "Company.SharedKernel"
+
+banned_in:
+  domain:
+    - "Microsoft.EntityFrameworkCore"
+    - "Microsoft.AspNetCore"
+    - "System.Data"
+    - "System.IO"                    # R-NET-054
+    - "System.Net.Http"
+    - "Azure.Messaging"
+
+limits:
+  interface_max_methods: 5
+  constructor_max_params: 5
+  cyclomatic_complexity: 10
+  cognitive_complexity: 15
+  class_max_lines: 400
+  method_max_lines: 60
+  inheritance_depth: 3
+  nesting_depth: 3
+
+pii:
+  fields: ["Tckn","Vkn","Email","Phone","PlateNumber","Vin","ChassisNo","EngineNo","DriverLicenseNo","Iban","Address","BirthDate"]
+  marker_attribute: "Company.Common.SensitiveDataAttribute"
+  redaction_helper: "Company.Common.Redactor.Mask"
+
+taint:
+  sources:
+    - "Company.Integration.ServiceBusEnvelope.Body"
+    - "Company.Integration.Crm.CrmWebhookPayload.RawJson"
+    - "Microsoft.AspNetCore.Http.HttpRequest.Query"
+  sinks:
+    log:   ["Microsoft.Extensions.Logging.ILogger.Log", "Company.Logging.AuditLogger.Write"]
+    sql:   ["Company.Data.SqlRunner.Execute", "Dapper.SqlMapper.Query"]
+    http:  ["Company.Integration.SalesforceClient.Post"]
+  sanitizers: ["Company.Common.Sanitizer.Escape", "Company.Common.Redactor.Mask"]
+
+auth:
+  endpoint_namespaces: ["Company.Api.Endpoints"]
+  require_authorize_attribute: true
+  role_constants: "Company.Api.Security.Roles"
+
+integration:
+  client_namespace: "Company.Infrastructure.Clients"
+  correlation_header: "X-Correlation-Id"
+  require_retry_policy: true
+  require_circuit_breaker: true
+  require_idempotency: true
+  message_contract_namespace: "Company.Contracts.Messages"
+  require_version_field: true
+
+crypto:
+  banned_algorithms: ["MD5","SHA1","DES","TripleDES","RC2"]
+  min_tls: "1.2"
+  password_hash: "Argon2id"
+
+observability:
+  require_activity_on_external_calls: true
+  health_endpoints: ["/health/live", "/health/ready"]
+  audit_operations: ["OrderApproved","CustomerMerged","PriceOverridden"]
+
+mutation:
+  include: ["src/*/Domain/**", "src/*/Application/**"]
+  exclude: ["**/*.Generated.cs", "**/Migrations/**", "**/Dtos/**"]
+  max_survived_on_changed: 0
+
+supply_chain:
+  allowed_nuget_feeds: ["https://api.nuget.org/v3/index.json", "https://pkgs.company.local/v3/index.json"]
+  sbom_format: "cyclonedx"
+  require_action_sha_pinning: true
+
+severity_promotion:
+  s1_max_fp_rate: 0.02
+  s2_max_fp_rate: 0.10
+  grace_period_days: 14

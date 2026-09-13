@@ -61,23 +61,25 @@ Squad'ın tüm iş akışı tek bir merkezi kuyruk dosyası olan `tasks.json` (`
 
 ### Giriş Kapısı: Definition of Ready (DoR)
 Bir görevin durumu `pending`'den `in_progress`'e çekilmeden önce şu şartların **eksiksiz tamamlandığı** PM tarafından doğrulanır:
-1. **İş Analisti:** INVEST uyumlu kullanıcı hikayesi ve 4 kademeli Gherkin kabul kriterleri (`Happy`, `Validation`, `Conflict`, `Security`) hazırlandı mı?
-2. **Sistem Mimarı:** Domain Entity, `ViewModel` sözleşmesi, uygulanacak **Kurumsal Tasarım Kalıpları (`designPatternsUsed`)** ve `Result` desenli servis arayüzü (`IService`) çizildi mi?
+1. **İş Analisti:** INVEST uyumlu kullanıcı hikayesi, 4 kademeli Gherkin senaryoları (`Happy`, `Validation`, `Conflict`, `Security`) ve PII veri sınıflandırması hazırlandı mı?
+2. **Sistem Mimarı:** `contract.yaml` katman ve feature sınırlarına uygun mimari model, `ViewModel` sözleşmesi, uygulanacak **Kurumsal Tasarım Kalıpları (`designPatternsUsed`)** ve Result pattern servis arayüzü çizildi mi?
 3. **UI/UX Tasarımcısı:** Bootstrap 5.3 görsel hiyerarşisi, 5 kademeli bileşen durum matrisi ve form UX şartnamesi hazırlandı mı?
-*Bu şartlardan biri dahi eksikse geliştirme başlatılamaz!*
+*Bu şartlardan biri dahi eksikse geliştirme başlatılamaz (`dorMet: true` verilemez).*
 
 ### Çıkış Kapısı: Definition of Done (DoD)
 Bir görevin durumu `in_review`'dan `completed`'a çekilmeden önce şu şartların sağlandığı onaylanır:
-1. **Gereksinim Karşılama:** Analistin tüm Gherkin kabul kriterleri çalışır durumda mı?
-2. **Derleme Bütünlüğü:** `dotnet build` çalıştırıldığında sıfır hata ve sıfır sarı uyarı (`warning`) ile başarıyla derleniyor mu?
-3. **Otomatik Testler:** xUnit birim testleri ve `WebApplicationFactory` entegrasyon testleri %100 yeşil mi?
-4. **Tasarım Kalıpları & Mimari:** Kararlaştırılan Tasarım Kalıpları kod tabanına temiz kod ilkeleriyle işlendi mi?
-5. **Güvenlik ve Kalite:** Security Reviewer OWASP ASVS, CSRF/XSS ve SonarAnalyzer denetimini imzaladı mı?
-6. **Kullanıcı Bilgilendirmesi:** Görevin tamamlandığı ve nelerin üretildiği kullanıcıya açıkça raporlandı mı?
+1. **Gereksinim Karşılama & RTM:** Analistin tüm Gherkin kabul kriterleri çalışır ve test edilmiş durumda mı?
+2. **Derleme Bütünlüğü:** `dotnet build` çalıştırıldığında sıfır hata ve sıfır sarı uyarı (`warning`) ile başarıyla derleniyor mu? (`<TreatWarningsAsErrors>true`)
+3. **BannedSymbols Kontrolü:** `BannedSymbols.txt` analizinde ihlal (DateTime.Now, Task.Result vb.) var mı? (Sıfır İhlal)
+4. **Stryker Mutasyon Testi (R-TST-001):** Değişen dosyalarda hayatta kalan mutant sayısı tam **0** mı?
+5. **UDAP v2 Şiddet Kapısı:** S1 ihlali = 0 mı? S2 bulguları için geçerli `@UdapSuppress` gerekçesi mevcut mu?
+6. **Güvenlik ve Kalite İmzası:** Security Reviewer ASVS v5.0, KVKK/PII, CSRF/XSS ve SonarAnalyzer onayını verdi mi?
+7. **Tasarım Kalıpları:** Kullanılan kalıplar `artifacts.designPatternsUsed` içine belgelendi mi?
+8. **Kullanıcı Bilgilendirmesi:** Görevin tamamlandığı ve nelerin üretildiği kullanıcıya şeffafça raporlandı mı?
 
 ---
 
-## 📋 4. Standart `tasks.json` Görev Şeması
+## 📋 4. Standart `tasks.json` Görev Şeması (UDAP v2 Genişletilmiş)
 
 Her görev aşağıdaki standart JSON formatında (`tasks.schema.json` doğrulamasından geçecek şekilde) kuyruğa yazılır:
 
@@ -109,7 +111,17 @@ Her görev aşağıdaki standart JSON formatında (`tasks.schema.json` doğrulam
     "designPatternsUsed": ["Strategy Pattern", "Decorator Pattern"],
     "uiDesignTokens": [],
     "testsWritten": [],
-    "securityAuditPassed": false
+    "securityAuditPassed": false,
+    "mutationScore": 100.0,
+    "standardTraceability": ["ASVS-V14", "ISO25010-Security", "KVKK-m12"],
+    "toolAuditResults": {
+      "archunit": "pass",
+      "opengrep": "pass",
+      "codeql": "pass",
+      "stryker": "pass",
+      "roslyn": "pass"
+    },
+    "suppressions": []
   }
 }
 ```

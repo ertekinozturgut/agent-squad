@@ -1,0 +1,6 @@
+name: company-security/csharp-flow-models
+version: 2.0.0
+dependencies:
+  codeql/csharp-all: "*"
+dataExtensions:
+  - company-flow-model.yml
