@@ -1,3 +1,18 @@
+# ==============================================================================
+# Agent Squad v2 — UDAP .NET merkezi kural kataloğu
+#
+# enforced_by  : kuralı uygulayan BİRİNCİL kapı.
+#                - opengrep : .opengrep/rules.yaml içindeki kural kimliği
+#                - archunit : tests/ArchitectureTests içindeki test metodu adı
+#                - codeql   : .ql dosyasındaki @id (veya codeql/csharp-queries @id)
+#                - roslyn   : analizör tanı kodu (.editorconfig / BannedSymbols.txt)
+#                - stryker  : stryker-config.json eşiği
+#                - process  : otomatikleştirilemeyen, DoD kapısında insan onaylı kontrol
+# also_enforced_by : aynı kuralı derinlemesine doğrulayan ikincil kapılar.
+#
+# Bu dosya ile motor konfigürasyonları arasındaki tutarlılık `bash .agents/verify.sh`
+# tarafından doğrulanır; eşleşmeyen her kimlik hata verir.
+# ==============================================================================
 - id: R-ARCH-001
   text: Domain dış katmanlara bağımlı olamaz
   severity: S1
@@ -36,6 +51,11 @@
   layer: L3
   owner: archunit
   enforced_by: ArchUnitNET.DomainMustNotReferenceFrameworkTypes
+  also_enforced_by:
+  - banned-import-domain-microsoft-entityframeworkcore
+  - banned-import-domain-microsoft-aspnetcore
+  - banned-import-domain-system-data
+  - banned-import-domain-azure-messaging
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -83,10 +103,10 @@
   text: Katmanlar arası geçiş yalnızca arayüz üzerinden
   severity: S2
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.CrossLayerCallsMustUseInterfaces
+  owner: process
+  enforced_by: process.cross-layer-interface-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -96,12 +116,12 @@
   exceptions_allowed: true
 - id: R-ARCH-007
   text: Döngüsel namespace bağımlılığı yok
-  severity: S1
+  severity: S2
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.NoCircularNamespaceDependencies
+  owner: process
+  enforced_by: process.namespace-cycle-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -113,10 +133,10 @@
   text: Public API yüzeyi izlenir (istenmeyen genişleme yok)
   severity: S2
   layer: L1
-  owner: roslyn
-  enforced_by: PublicApiAnalyzers.RS0016
+  owner: process
+  enforced_by: process.public-api-surface-review
   maturity: beta
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     msfdg:
@@ -128,10 +148,10 @@
   text: internal varsayılan; public gerekçe ister
   severity: S3
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.PreferInternalOverPublic
+  owner: process
+  enforced_by: process.default-internal-visibility-review
   maturity: beta
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.05
   standards:
     msfdg:
@@ -144,9 +164,9 @@
   severity: S3
   layer: L3
   owner: process
-  enforced_by: ArchUnitNET.RequireAssemblyMarkerType
+  enforced_by: process.assembly-marker-type-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -174,9 +194,9 @@
   severity: S2
   layer: L3
   owner: process
-  enforced_by: ArchUnitNET.SharedCodeMustBeInSharedKernel
+  enforced_by: process.shared-kernel-placement-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -203,10 +223,10 @@
   text: Handler tek public metot
   severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.HandlerMustHaveSinglePublicMethod
+  owner: process
+  enforced_by: process.handler-single-responsibility-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -216,12 +236,12 @@
   exceptions_allowed: true
 - id: R-SOLID-003
   text: Constructor'da somut sınıf yok
-  severity: S1
+  severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.ConstructorMustNotDependOnConcreteClasses
+  owner: process
+  enforced_by: process.constructor-abstraction-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -234,7 +254,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-notimplemented-exception
+  enforced_by: opengrep-no-notimplemented-exception
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -251,9 +271,9 @@
   severity: S2
   layer: L3
   owner: roslyn
-  enforced_by: SonarAnalyzer.CSharp.S2325
+  enforced_by: SonarAnalyzer.CSharp.S3260
   maturity: beta
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.03
   standards:
     msfdg:
@@ -265,10 +285,10 @@
   text: Interface ≤ 5 metot
   severity: S2
   layer: L2
-  owner: roslyn
-  enforced_by: ArchUnitNET.InterfaceMethodCountLimit
+  owner: process
+  enforced_by: process.interface-segregation-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -281,9 +301,9 @@
   severity: S2
   layer: L2
   owner: roslyn
-  enforced_by: ArchUnitNET.ConstructorParameterCountLimit
+  enforced_by: SonarAnalyzer.CSharp.S107
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -298,7 +318,7 @@
   owner: roslyn
   enforced_by: SonarAnalyzer.CSharp.S1541
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -313,7 +333,7 @@
   owner: roslyn
   enforced_by: SonarAnalyzer.CSharp.S3776
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -325,10 +345,10 @@
   text: Sınıf ≤ 400 satır, metot ≤ 60 satır
   severity: S3
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.class-and-method-length-limits
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S138
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.04
   standards:
     iso25010:
@@ -342,8 +362,10 @@
   layer: L2
   owner: roslyn
   enforced_by: SonarAnalyzer.CSharp.S134
+  also_enforced_by:
+  - cs/sonarqube/nested-ternary-operator
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.03
   standards:
     iso25010:
@@ -355,10 +377,10 @@
   text: Kalıtım derinliği ≤ 3; kompozisyon tercih edilir
   severity: S3
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.InheritanceDepthLimit
+  owner: roslyn
+  enforced_by: SonarAnalyzer.CSharp.S110
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     msfdg:
@@ -370,10 +392,10 @@
   text: static yardımcı sınıflar iş mantığı barındıramaz
   severity: S2
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.StaticClassesMustNotContainBusinessLogic
+  owner: process
+  enforced_by: process.static-helper-business-logic-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -387,8 +409,10 @@
   layer: L2
   owner: roslyn
   enforced_by: Microsoft.VisualStudio.Threading.Analyzers.VSTHRD002
+  also_enforced_by:
+  - cs/senior-engineering/sync-blocking-task
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -404,8 +428,10 @@
   layer: L2
   owner: roslyn
   enforced_by: Microsoft.VisualStudio.Threading.Analyzers.VSTHRD100
+  also_enforced_by:
+  - cs/senior-engineering/async-void-method
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -422,7 +448,7 @@
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA2007
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.03
   standards:
     iso25010:
@@ -435,7 +461,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.cancellation-token-propagation
+  enforced_by: opengrep-cancellation-token-propagation
+  also_enforced_by:
+  - cs/senior-engineering/cancellation-token-dropped
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -454,7 +482,7 @@
   owner: roslyn
   enforced_by: Microsoft.VisualStudio.Threading.Analyzers.VSTHRD200
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     msfdg:
@@ -467,7 +495,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-await-in-lock
+  enforced_by: opengrep-no-await-in-lock
+  also_enforced_by:
+  - cs/senior-engineering/await-inside-lock
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -485,8 +515,10 @@
   layer: L2
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA2000
+  also_enforced_by:
+  - cs/sonarqube/missing-dispose-on-idisposable
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -503,7 +535,7 @@
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA2012
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     msfdg:
@@ -518,7 +550,7 @@
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.CSharp.CS4014
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -533,7 +565,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.semaphore-released-in-finally
+  enforced_by: opengrep-semaphore-released-in-finally
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -550,7 +582,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.parallel-no-async-lambda
+  enforced_by: opengrep-parallel-no-async-lambda
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -565,7 +597,9 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.threadstatic-asynclocal-audit
+  enforced_by: opengrep-threadstatic-asynclocal-audit
+  also_enforced_by:
+  - cs/senior-engineering/lock-on-this-or-type
   maturity: beta
   fixture_proven: true
   fp_rate: 0.03
@@ -582,7 +616,9 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.bounded-collections
+  enforced_by: opengrep-bounded-collections
+  also_enforced_by:
+  - cs/senior-engineering/unbounded-channel-usage
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -599,7 +635,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.meaningful-exception-logging
+  enforced_by: opengrep-meaningful-exception-logging
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -616,7 +652,9 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-throw-ex-rethrow
+  enforced_by: opengrep-no-throw-ex-rethrow
+  also_enforced_by:
+  - cs/sonarqube/throw-ex-rethrow
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -633,7 +671,9 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-throw-raw-exception
+  enforced_by: opengrep-no-throw-raw-exception
+  also_enforced_by:
+  - cs/sonarqube/generic-exception-thrown
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -650,7 +690,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.do-not-swallow-operationcanceled
+  enforced_by: opengrep-do-not-swallow-operationcanceled
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -665,7 +705,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.do-not-catch-fatal-exceptions
+  enforced_by: opengrep-do-not-catch-fatal-exceptions
+  also_enforced_by:
+  - cs/sonarqube/fatal-exception-caught
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -681,8 +723,8 @@
   text: Hata detayları istemciye sızdırılamaz
   severity: S2
   layer: L1
-  owner: codeql
-  enforced_by: opengrep.no-exception-leak-to-client
+  owner: opengrep
+  enforced_by: opengrep-no-exception-leak-to-client
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -699,7 +741,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-empty-catch
+  enforced_by: opengrep-no-empty-catch
+  also_enforced_by:
+  - cs/sonarqube/empty-catch-block
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -717,9 +761,9 @@
   severity: S1
   layer: L1
   owner: codeql
-  enforced_by: codeql.csharp.security.ExceptionInformationLeak
+  enforced_by: cs/information-exposure-through-exception
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -734,7 +778,9 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.catch-specific-exception-types
+  enforced_by: opengrep-catch-specific-exception-types
+  also_enforced_by:
+  - cs/sonarqube/broad-catch-swallowing
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -751,7 +797,7 @@
   severity: S3
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.exception-filters-no-side-effects
+  enforced_by: opengrep-exception-filters-no-side-effects
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -765,12 +811,12 @@
   exceptions_allowed: true
 - id: R-NET-082
   text: Global exception handler zorunlu, stack trace dışarı sızmaz
-  severity: S1
+  severity: S2
   layer: L1
-  owner: archunit
-  enforced_by: ArchUnitNET.GlobalExceptionHandlerRequired
+  owner: process
+  enforced_by: process.global-exception-handler-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -782,12 +828,12 @@
   exceptions_allowed: false
 - id: R-NET-083
   text: Güvenlik olayları (auth başarısız, yetki reddi) loglanır
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.security-events-logged
+  owner: process
+  enforced_by: process.security-events-audit-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     asvs:
@@ -802,9 +848,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.LogInjection
+  enforced_by: cs/log-forging
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -819,7 +865,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.structured-logging-no-interpolation
+  enforced_by: opengrep-structured-logging-no-interpolation
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -834,7 +880,7 @@
   severity: S3
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.log-level-convention
+  enforced_by: opengrep-log-level-convention
   maturity: beta
   fixture_proven: true
   fp_rate: 0.05
@@ -849,9 +895,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.PiiLoggingSink
+  enforced_by: cs/senior-engineering/sensitive-data-logged
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -867,12 +913,12 @@
   exceptions_allowed: false
 - id: R-PII-002
   text: PII alanı exception mesajına konulamaz
-  severity: S1
+  severity: S2
   layer: L2
-  owner: codeql
-  enforced_by: codeql.csharp.security.PiiInExceptionMessage
+  owner: process
+  enforced_by: process.kvkk-exception-message-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -899,12 +945,12 @@
   exceptions_allowed: false
 - id: R-PII-004
   text: PII alanı üçüncü taraf istemci payload'ına maskesiz gidemez
-  severity: S1
+  severity: S2
   layer: L2
-  owner: codeql
-  enforced_by: codeql.csharp.security.PiiInExternalClientPayload
+  owner: process
+  enforced_by: process.kvkk-outbound-payload-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     kvkk:
@@ -919,7 +965,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.pii-in-cache-key
+  enforced_by: opengrep-pii-in-cache-key
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -935,8 +981,8 @@
   text: PII alanı URL query string'inde taşınamaz
   severity: S1
   layer: L1
-  owner: codeql
-  enforced_by: opengrep.pii-in-url-query
+  owner: opengrep
+  enforced_by: opengrep-pii-in-url-query
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -957,7 +1003,7 @@
   owner: process
   enforced_by: process.kvkk-data-retention-policy
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     kvkk:
@@ -970,7 +1016,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.tostring-no-pii
+  enforced_by: opengrep-tostring-no-pii
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -987,7 +1033,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-real-pii-in-tests
+  enforced_by: opengrep-no-real-pii-in-tests
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -999,12 +1045,12 @@
   exceptions_allowed: false
 - id: R-PII-010
   text: Analitik/telemetri olaylarına PII eklenemez
-  severity: S1
+  severity: S2
   layer: L2
-  owner: codeql
-  enforced_by: codeql.csharp.security.PiiInTelemetry
+  owner: process
+  enforced_by: process.kvkk-telemetry-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     kvkk:
@@ -1036,7 +1082,7 @@
   severity: S2
   layer: L1
   owner: opengrep
-  enforced_by: opengrep.allow-anonymous-comment-justification
+  enforced_by: opengrep-allow-anonymous-comment-justification
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -1048,12 +1094,12 @@
   exceptions_allowed: true
 - id: R-AUTH-003
   text: Kaynak sahipliği kontrolü olmadan id ile erişim yok
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.idor-resource-ownership-check
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -1068,7 +1114,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.jwt-validation-parameters
+  enforced_by: opengrep-jwt-validation-parameters
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1085,7 +1131,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.jwt-require-https-metadata
+  enforced_by: opengrep-jwt-require-https-metadata
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1102,9 +1148,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.HardcodedJwtSecret
+  enforced_by: cs/senior-engineering/hardcoded-secret-literal
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1119,7 +1165,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.roles-from-constants
+  enforced_by: opengrep-roles-from-constants
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1151,7 +1197,7 @@
   owner: roslyn
   enforced_by: SonarAnalyzer.CSharp.S4507
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -1166,9 +1212,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.SqlInjection
+  enforced_by: cs/sql-injection
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1185,9 +1231,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.CommandInjection
+  enforced_by: cs/command-line-injection
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1202,9 +1248,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.PathTraversal
+  enforced_by: cs/path-injection
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1219,17 +1265,18 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.Ssrf
+  enforced_by: cs/request-forgery
+  also_enforced_by:
+  - cs/senior-engineering/unvalidated-open-redirect
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
     - CWE-918
     owasp_api10:
     - API10:2023
-  rationale: Kullanıcı girdisiyle HTTP isteği başlatılması iç ağın taranmasına ve metadata servislerinin sızdırılmasına yol
-    açar.
+  rationale: Kullanıcı girdisiyle HTTP isteği başlatılması iç ağın taranmasına ve metadata servislerinin sızdırılmasına yol açar.
   remediation: Hedef URL'yi katı bir allowlist ile sınırla; özel IP aralıklarına erişimi engelle.
   exceptions_allowed: false
 - id: R-INJ-005
@@ -1237,7 +1284,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.xml-reader-dtd-disabled
+  enforced_by: opengrep-xml-reader-dtd-disabled
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1253,8 +1300,8 @@
   text: TypeNameHandling / polimorfik deserialization yasak
   severity: S1
   layer: L2
-  owner: codeql
-  enforced_by: opengrep.typenamehandling-prohibited
+  owner: opengrep
+  enforced_by: opengrep-typenamehandling-prohibited
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1271,9 +1318,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.LdapXpathInjection
+  enforced_by: cs/ldap-injection
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1287,7 +1334,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.regex-injection-and-redos
+  enforced_by: opengrep-regex-injection-and-redos
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1301,10 +1348,10 @@
   text: Her public endpoint girdi modeli doğrulama attribute'u taşır
   severity: S2
   layer: L1
-  owner: archunit
-  enforced_by: ArchUnitNET.InputModelValidationRequired
+  owner: process
+  enforced_by: process.input-model-validation-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     asvs:
@@ -1316,8 +1363,8 @@
   text: Deserialization boyut/derinlik limiti tanımlı
   severity: S2
   layer: L2
-  owner: codeql
-  enforced_by: opengrep.deserialization-depth-limit
+  owner: opengrep
+  enforced_by: opengrep-deserialization-depth-limit
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1334,7 +1381,7 @@
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5350
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1352,7 +1399,7 @@
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5358
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1366,8 +1413,10 @@
   layer: L2
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5394
+  also_enforced_by:
+  - cs/senior-engineering/insecure-random-generator
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1380,7 +1429,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.secure-password-hashing
+  enforced_by: opengrep-secure-password-hashing
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1397,9 +1446,11 @@
   severity: S1
   layer: L2
   owner: roslyn
-  enforced_by: opengrep.no-certificate-validation-bypass
+  enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA5359
+  also_enforced_by:
+  - opengrep-no-certificate-validation-bypass
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1414,7 +1465,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.tls-min-version
+  enforced_by: opengrep-tls-min-version
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1431,7 +1482,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-static-iv
+  enforced_by: opengrep-no-static-iv
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1446,7 +1497,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.key-material-not-string
+  enforced_by: opengrep-key-material-not-string
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -1461,7 +1512,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-http-plain-url
+  enforced_by: opengrep-no-http-plain-url
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1478,7 +1529,9 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.readonly-query-asnotracking
+  enforced_by: opengrep-readonly-query-asnotracking
+  also_enforced_by:
+  - cs/senior-engineering/efcore-missing-asnotracking
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -1492,8 +1545,8 @@
   text: Uygulama katmanında Include yerine projeksiyon
   severity: S2
   layer: L2
-  owner: roslyn
-  enforced_by: opengrep.prefer-select-projection-over-include
+  owner: opengrep
+  enforced_by: opengrep-prefer-select-projection-over-include
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -1508,7 +1561,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-lazy-loading
+  enforced_by: opengrep-no-lazy-loading
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1523,9 +1576,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.EfFromSqlRawInjection
+  enforced_by: cs/senior-engineering/raw-sql-interpolation
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1538,15 +1591,14 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-singleton-dbcontext
+  enforced_by: opengrep-no-singleton-dbcontext
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
   standards:
     cwe:
     - CWE-543
-  rationale: DbContext iş parçacığı güvenli (thread-safe) değildir; singleton kaydı yarış durumlarına ve veri bozulmasına
-    yol açar.
+  rationale: DbContext iş parçacığı güvenli (thread-safe) değildir; singleton kaydı yarış durumlarına ve veri bozulmasına yol açar.
   remediation: DbContext'i Scoped olarak kaydet.
   exceptions_allowed: false
 - id: R-NET-015
@@ -1554,7 +1606,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.entity-type-configuration-classes
+  enforced_by: opengrep-entity-type-configuration-classes
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1569,7 +1621,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-sync-savechanges
+  enforced_by: opengrep-no-sync-savechanges
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1584,7 +1636,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-unpaged-tolist
+  enforced_by: opengrep-no-unpaged-tolist
+  also_enforced_by:
+  - cs/senior-engineering/efcore-unpaged-tolist
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1600,10 +1654,10 @@
   text: Transaction sınırı açıkça tanımlı (UoW dışında SaveChanges yok)
   severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.TransactionBoundaryExplicit
+  owner: process
+  enforced_by: process.transaction-boundary-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -1613,12 +1667,12 @@
   exceptions_allowed: true
 - id: R-NET-019
   text: Migration'sız model değişikliği yok
-  severity: S1
+  severity: S2
   layer: L3
   owner: process
   enforced_by: process.model-changes-require-migrations
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     aspice:
@@ -1631,7 +1685,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-inmemory-db-in-integration-tests
+  enforced_by: opengrep-no-inmemory-db-in-integration-tests
   maturity: beta
   fixture_proven: true
   fp_rate: 0.03
@@ -1645,10 +1699,10 @@
   text: SQL indeksleme ve yabancı anahtar kısıtları açık tanımlı
   severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.foreign-keys-and-indexes-explicit
+  owner: process
+  enforced_by: process.migration-index-and-fk-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -1660,10 +1714,10 @@
   text: Optimistic concurrency token'ı olan entity'de güncelleme kontrolü
   severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.optimistic-concurrency-handling
+  owner: process
+  enforced_by: process.optimistic-concurrency-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     cwe:
@@ -1676,7 +1730,7 @@
   severity: S3
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.prefer-batch-operations
+  enforced_by: opengrep-prefer-batch-operations
   maturity: stable
   fixture_proven: true
   fp_rate: 0.03
@@ -1691,7 +1745,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-new-httpclient
+  enforced_by: opengrep-no-new-httpclient
+  also_enforced_by:
+  - cs/senior-engineering/new-httpclient-instance
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -1703,12 +1759,12 @@
   exceptions_allowed: false
 - id: R-NET-040
   text: Dış çağrılarda correlation ID taşınır
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.propagate-correlation-id
+  owner: process
+  enforced_by: process.correlation-id-propagation-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     aspice:
@@ -1720,12 +1776,12 @@
   exceptions_allowed: false
 - id: R-NET-041
   text: Mesaj işleyicide idempotency anahtarı zorunlu
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.message-handler-idempotency
+  owner: process
+  enforced_by: process.message-handler-idempotency-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -1735,12 +1791,12 @@
   exceptions_allowed: false
 - id: R-NET-042
   text: Retry politikası olmayan dış çağrı yasak
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.require-retry-policy
+  owner: process
+  enforced_by: process.resilience-policy-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -1750,12 +1806,12 @@
   exceptions_allowed: false
 - id: R-NET-043
   text: Dead-letter işleme yolu tanımlı
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.dead-letter-queue-handling
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -1783,7 +1839,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.httpclient-timeout-configured
+  enforced_by: opengrep-httpclient-timeout-configured
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -1797,10 +1853,10 @@
   text: Circuit breaker tanımlı (Polly pipeline)
   severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.CircuitBreakerConfigured
+  owner: process
+  enforced_by: process.circuit-breaker-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -1810,12 +1866,12 @@
   exceptions_allowed: true
 - id: R-NET-047
   text: Retry yalnızca idempotent operasyonlarda
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.retry-only-idempotent-calls
+  owner: process
+  enforced_by: process.retry-idempotency-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -1828,7 +1884,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.backoff-with-jitter
+  enforced_by: opengrep-backoff-with-jitter
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -1840,12 +1896,12 @@
   exceptions_allowed: true
 - id: R-NET-049
   text: Mesaj sözleşmesinde version alanı zorunlu
-  severity: S1
+  severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.MessageContractMustHaveVersionField
+  owner: process
+  enforced_by: process.message-contract-version-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     aspice:
@@ -1857,12 +1913,12 @@
   exceptions_allowed: false
 - id: R-NET-055
   text: Mesaj sözleşmesi geriye uyumlu (alan silinemez)
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.message-contract-backward-compatible
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -1872,28 +1928,27 @@
   exceptions_allowed: false
 - id: R-NET-056
   text: 'Outbox pattern: dış çağrı ile DB yazımı aynı transaction''da olamaz'
-  severity: S1
+  severity: S2
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.OutboxPatternEnforced
+  owner: process
+  enforced_by: process.outbox-pattern-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
     - Reliability/Integrity
-  rationale: Veritabanı transaction'ı içinde harici HTTP/Bus çağrısı yapmak iki aşamalı commit (2PC) gerektirir ve tutarsızlığa
-    yol açar.
+  rationale: Veritabanı transaction'ı içinde harici HTTP/Bus çağrısı yapmak iki aşamalı commit (2PC) gerektirir ve tutarsızlığa yol açar.
   remediation: Transactional Outbox pattern uygulayarak mesajları veritabanına yaz ve asenkron yayınla.
   exceptions_allowed: false
 - id: R-NET-057
   text: Poison message limiti tanımlı
   severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.poison-message-handling
+  owner: process
+  enforced_by: process.poison-message-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -1903,12 +1958,12 @@
   exceptions_allowed: true
 - id: R-NET-058
   text: Webhook imza doğrulaması zorunlu
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.webhook-signature-verification
+  owner: process
+  enforced_by: process.webhook-signature-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -1922,10 +1977,10 @@
   text: Her dış çağrı bir Activity/span açar
   severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.activity-source-on-external-calls
+  owner: process
+  enforced_by: process.external-call-span-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -1935,12 +1990,12 @@
   exceptions_allowed: true
 - id: R-OBS-002
   text: Trace context (W3C traceparent) propagate edilir
-  severity: S1
+  severity: S2
   layer: L2
-  owner: opengrep
-  enforced_by: opengrep.traceparent-propagation
+  owner: process
+  enforced_by: process.traceparent-propagation-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -1952,10 +2007,10 @@
   text: Health check endpoint'i tanımlı (liveness + readiness)
   severity: S2
   layer: L1
-  owner: archunit
-  enforced_by: ArchUnitNET.HealthChecksConfigured
+  owner: process
+  enforced_by: process.health-check-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -1968,7 +2023,7 @@
   severity: S3
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.metric-names-convention
+  enforced_by: opengrep-metric-names-convention
   maturity: beta
   fixture_proven: true
   fp_rate: 0.04
@@ -1980,12 +2035,12 @@
   exceptions_allowed: true
 - id: R-OBS-005
   text: Kritik iş akışları için audit kaydı zorunlu
-  severity: S1
+  severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.CriticalOperationsAuditLoggingRequired
+  owner: process
+  enforced_by: process.audit-logging-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     asvs:
@@ -2000,7 +2055,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-high-cardinality-metric-tags
+  enforced_by: opengrep-no-high-cardinality-metric-tags
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -2015,7 +2070,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.strongly-typed-options
+  enforced_by: opengrep-strongly-typed-options
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -2030,9 +2085,9 @@
   severity: S1
   layer: L2
   owner: codeql
-  enforced_by: codeql.csharp.security.CompanyFlowModelPiiLog
+  enforced_by: cs/senior-engineering/sensitive-data-logged
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     cwe:
@@ -2048,12 +2103,12 @@
   exceptions_allowed: false
 - id: R-NET-032
   text: appsettings içinde sır yok
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.gitleaks-secret-detection
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -2067,10 +2122,10 @@
   text: Startup'ta konfigürasyon doğrulaması (ValidateOnStart)
   severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.OptionsValidationOnStart
+  owner: process
+  enforced_by: process.options-validation-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -2083,7 +2138,7 @@
   severity: S1
   layer: L1
   owner: opengrep
-  enforced_by: opengrep.no-developerexceptionpage-in-prod
+  enforced_by: opengrep-no-developerexceptionpage-in-prod
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2100,7 +2155,7 @@
   severity: S1
   layer: L1
   owner: opengrep
-  enforced_by: opengrep.cors-no-wildcard-with-credentials
+  enforced_by: opengrep-cors-no-wildcard-with-credentials
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2116,10 +2171,10 @@
   text: Güvenlik başlıkları tanımlı (HSTS, CSP, X-Content-Type-Options)
   severity: S2
   layer: L1
-  owner: opengrep
-  enforced_by: opengrep.security-headers-configured
+  owner: process
+  enforced_by: process.security-headers-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     asvs:
@@ -2133,7 +2188,7 @@
   severity: S1
   layer: L1
   owner: opengrep
-  enforced_by: opengrep.no-detailed-errors-in-prod
+  enforced_by: opengrep-no-detailed-errors-in-prod
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2148,7 +2203,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-debug-directives-in-business-logic
+  enforced_by: opengrep-no-debug-directives-in-business-logic
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -2163,7 +2218,7 @@
   severity: S3
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.env-var-names-from-constants
+  enforced_by: opengrep-env-var-names-from-constants
   maturity: beta
   fixture_proven: true
   fp_rate: 0.04
@@ -2178,9 +2233,11 @@
   severity: S1
   layer: L2
   owner: roslyn
-  enforced_by: Microsoft.CodeAnalysis.BannedApiAnalyzers
+  enforced_by: Microsoft.CodeAnalysis.BannedApiAnalyzers.RS0030
+  also_enforced_by:
+  - cs/senior-engineering/datetime-now-direct-usage
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2195,7 +2252,7 @@
   owner: roslyn
   enforced_by: Microsoft.CodeAnalysis.NetAnalyzers.CA1304
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     msfdg:
@@ -2208,7 +2265,7 @@
   severity: S2
   layer: L3
   owner: opengrep
-  enforced_by: opengrep.no-guid-newguid-in-domain
+  enforced_by: opengrep-no-guid-newguid-in-domain
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -2222,8 +2279,8 @@
   text: Environment.MachineName, Process.Id Domain'de yasak
   severity: S2
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.NoEnvironmentInDomain
+  owner: opengrep
+  enforced_by: opengrep-no-environment-access-in-domain
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -2239,6 +2296,9 @@
   layer: L3
   owner: archunit
   enforced_by: ArchUnitNET.DomainMustNotAccessFileSystemOrNetwork
+  also_enforced_by:
+  - banned-import-domain-system-io
+  - banned-import-domain-system-net-http
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2253,7 +2313,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.prefer-datetimeoffset
+  enforced_by: opengrep-prefer-datetimeoffset
   maturity: stable
   fixture_proven: true
   fp_rate: 0.02
@@ -2270,7 +2330,7 @@
   owner: stryker
   enforced_by: stryker.coverage-threshold
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2283,9 +2343,9 @@
   severity: S2
   layer: L3
   owner: process
-  enforced_by: ArchUnitNET.TestIsolationIntegrity
+  enforced_by: process.test-isolation-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -2297,8 +2357,8 @@
   text: Assertion'sız test yok
   severity: S1
   layer: L2
-  owner: stryker
-  enforced_by: opengrep.test-must-contain-assertion
+  owner: opengrep
+  enforced_by: opengrep-test-must-contain-assertion
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2313,7 +2373,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.fact-skip-must-have-reason
+  enforced_by: opengrep-fact-skip-must-have-reason
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -2325,12 +2385,12 @@
   exceptions_allowed: true
 - id: R-TDD-005
   text: Test diff kalkanı
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.test-diff-shield
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2340,12 +2400,12 @@
   exceptions_allowed: false
 - id: R-TP-001
   text: Kritik sınıfın testi var
-  severity: S1
+  severity: S2
   layer: L2
-  owner: archunit
-  enforced_by: ArchUnitNET.CriticalClassesMustHaveTests
+  owner: process
+  enforced_by: process.critical-class-test-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2360,7 +2420,7 @@
   owner: stryker
   enforced_by: stryker.zero-survived-mutants-on-diff
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2370,12 +2430,12 @@
   exceptions_allowed: false
 - id: R-TST-002
   text: Yeni testler implementasyon öncesi kırmızı olmalı
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.red-gate-tdd
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2388,7 +2448,9 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.no-thread-sleep-in-tests
+  enforced_by: opengrep-no-thread-sleep-in-tests
+  also_enforced_by:
+  - cs/senior-engineering/thread-sleep-in-async
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2403,7 +2465,7 @@
   severity: S3
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.test-naming-convention
+  enforced_by: opengrep-test-naming-convention
   maturity: stable
   fixture_proven: true
   fp_rate: 0.03
@@ -2418,7 +2480,7 @@
   severity: S2
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.tests-order-independent
+  enforced_by: opengrep-tests-order-independent
   maturity: stable
   fixture_proven: true
   fp_rate: 0.01
@@ -2445,12 +2507,12 @@
   exceptions_allowed: false
 - id: R-TST-007
   text: Her S1 kuralın pozitif+negatif+boş fixture'ı var
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.s1-fixture-proven-verification
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     aspice:
@@ -2465,7 +2527,7 @@
   owner: process
   enforced_by: process.new-code-coverage-gate
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.02
   standards:
     iso25010:
@@ -2477,10 +2539,10 @@
   text: Central Package Management aktif
   severity: S1
   layer: L2
-  owner: process
-  enforced_by: process.central-package-management
+  owner: msbuild
+  enforced_by: msbuild.ManagePackageVersionsCentrally
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     slsa:
@@ -2492,10 +2554,10 @@
   text: packages.lock.json + --locked-mode
   severity: S1
   layer: L2
-  owner: process
-  enforced_by: process.packages-lock-enforced
+  owner: msbuild
+  enforced_by: msbuild.RestorePackagesWithLockFile
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     slsa:
@@ -2509,10 +2571,10 @@
   text: AnalysisLevel sabit sürüm
   severity: S1
   layer: L2
-  owner: process
-  enforced_by: process.analysis-level-pinned
+  owner: msbuild
+  enforced_by: msbuild.AnalysisLevel
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso25010:
@@ -2524,10 +2586,10 @@
   text: TreatWarningsAsErrors yalnızca CI
   severity: S2
   layer: L2
-  owner: process
-  enforced_by: process.treat-warnings-as-errors-ci
+  owner: msbuild
+  enforced_by: msbuild.TreatWarningsAsErrors
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     msfdg:
@@ -2539,10 +2601,10 @@
   text: Nullable enable
   severity: S1
   layer: L2
-  owner: process
-  enforced_by: process.nullable-reference-types-enabled
+  owner: msbuild
+  enforced_by: msbuild.Nullable
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -2554,10 +2616,10 @@
   text: dotnet list package --vulnerable temiz
   severity: S1
   layer: L2
-  owner: process
-  enforced_by: process.no-vulnerable-nuget-packages
+  owner: msbuild
+  enforced_by: msbuild.NuGetAudit
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -2569,12 +2631,12 @@
   exceptions_allowed: false
 - id: R-SUP-001
   text: SBOM üretilir (CycloneDX/SPDX)
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.generate-sbom
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     ssdf:
@@ -2591,7 +2653,7 @@
   owner: process
   enforced_by: process.sign-build-artifacts
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     slsa:
@@ -2601,12 +2663,12 @@
   exceptions_allowed: true
 - id: R-SUP-003
   text: NuGet kaynağı allowlist; yalnızca onaylı feed
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.nuget-source-allowlist
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     cwe:
@@ -2621,7 +2683,7 @@
   owner: process
   enforced_by: process.nuget-package-signature-validation
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     slsa:
@@ -2636,7 +2698,7 @@
   owner: process
   enforced_by: process.license-compliance-check
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     iso25010:
@@ -2649,7 +2711,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.ci-action-pinned-by-sha
+  enforced_by: opengrep-ci-action-pinned-by-sha
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2666,7 +2728,7 @@
   severity: S1
   layer: L2
   owner: opengrep
-  enforced_by: opengrep.ci-secrets-and-pr-target
+  enforced_by: opengrep-ci-secrets-and-pr-target
   maturity: stable
   fixture_proven: true
   fp_rate: 0.0
@@ -2678,12 +2740,12 @@
   exceptions_allowed: false
 - id: R-AUT-001
   text: Araç tanımlayıcıları (VIN, şasi, motor no) PII sınıfında işlenir
-  severity: S1
+  severity: S2
   layer: L2
-  owner: codeql
-  enforced_by: codeql.csharp.security.AutomotivePiiTracking
+  owner: process
+  enforced_by: process.automotive-pii-classification-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso21434:
@@ -2695,12 +2757,12 @@
   exceptions_allowed: false
 - id: R-AUT-002
   text: Telematik/araç verisi akışı belgelenmiş kanaldan geçer
-  severity: S1
+  severity: S2
   layer: L3
-  owner: archunit
-  enforced_by: ArchUnitNET.TelematicsFlowDocumentedChannel
+  owner: process
+  enforced_by: process.telematics-channel-review
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso21434:
@@ -2710,12 +2772,12 @@
   exceptions_allowed: false
 - id: R-AUT-003
   text: Güvenlik açığı yönetimi kaydı zorunlu (CVE → issue → düzeltme izi)
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.vulnerability-management-trace
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso21434:
@@ -2732,7 +2794,7 @@
   owner: process
   enforced_by: process.architecture-decision-records
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     aspice:
@@ -2747,7 +2809,7 @@
   owner: process
   enforced_by: process.aspice-requirements-traceability
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.01
   standards:
     aspice:
@@ -2757,12 +2819,12 @@
   exceptions_allowed: true
 - id: R-AUT-006
   text: Üçüncü taraf bileşen envanteri güncel (SBOM ile eşleşir)
-  severity: S1
+  severity: S2
   layer: L2
   owner: process
   enforced_by: process.r155-sbom-inventory-match
   maturity: stable
-  fixture_proven: true
+  fixture_proven: false
   fp_rate: 0.0
   standards:
     iso21434:
@@ -2770,3 +2832,193 @@
   rationale: Üçüncü taraf kütüphanelerin onaylı SBOM envanteriyle eşleşmemesi tip onayını riske atar.
   remediation: Her release öncesi SBOM envanter kontrolünü doğrula.
   exceptions_allowed: false
+- id: R-GOF-001
+  text: Decorator sarmaladığı iç bileşeni atlayamaz
+  severity: S2
+  layer: L3
+  owner: codeql
+  enforced_by: cs/design-patterns/decorator-bypassing-inner
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: İç bileşeni atlayan bir decorator zinciri kırar ve davranışı sessizce değiştirir.
+  remediation: Decorator metodunda sarmalanan bileşenin karşılık gelen metodunu çağır.
+  exceptions_allowed: true
+- id: R-GOF-002
+  text: Factory somut tip döndüremez
+  severity: S2
+  layer: L3
+  owner: codeql
+  enforced_by: cs/design-patterns/factory-returns-concrete
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Flexibility/Replaceability
+  rationale: Somut tip döndüren factory, çağıranı somutlamaya bağlar ve kalıbın amacını yok eder.
+  remediation: Factory metodunun dönüş tipini arayüz veya soyut temel tip yap.
+  exceptions_allowed: true
+- id: R-GOF-003
+  text: Observer aboneliği için karşılık gelen abonelik iptali bulunmalı
+  severity: S2
+  layer: L2
+  owner: codeql
+  enforced_by: cs/design-patterns/observer-missing-unsubscribe
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-401
+    iso25010:
+    - Reliability/ResourceUtilization
+  rationale: Abonelikten çıkılmayan event handlerlar yayıncı yaşadığı sürece bellek sızıntısı yaratır.
+  remediation: Dispose veya karşılık gelen yaşam döngüsü metodunda -= ile aboneliği kaldır.
+  exceptions_allowed: true
+- id: R-GOF-004
+  text: Repository dışarıya IQueryable sızdıramaz
+  severity: S2
+  layer: L3
+  owner: codeql
+  enforced_by: cs/design-patterns/repository-leaking-iqueryable
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+  rationale: IQueryable sızdıran repository, sorgu detaylarını ve ORM bağımlılığını üst katmanlara taşır.
+  remediation: Repository metodundan IReadOnlyList / IEnumerable veya DTO döndür.
+  exceptions_allowed: true
+- id: R-GOF-005
+  text: Service Locator anti-deseni kullanılamaz
+  severity: S1
+  layer: L3
+  owner: codeql
+  enforced_by: cs/design-patterns/service-locator-anti-pattern
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Testability
+  rationale: GetService çağrıları bağımlılıkları gizler, test edilebilirliği ve derleme zamanı kontrolünü bozar.
+  remediation: Bağımlılığı constructor injection ile açıkça al.
+  exceptions_allowed: false
+- id: R-GOF-006
+  text: Double-checked locking volatile alan olmadan kullanılamaz
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: cs/design-patterns/singleton-broken-double-check
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-609
+    iso25010:
+    - Reliability/Concurrency
+  rationale: volatile olmayan alanda double-checked locking bellek yeniden sıralaması nedeniyle yarım kurulmuş nesne döndürebilir.
+  remediation: Lazy<T> kullan veya backing fieldı volatile yap.
+  exceptions_allowed: false
+- id: R-GOF-007
+  text: Tip üzerinde dallanan büyük switch bloğu Strategyye çıkarılmalı
+  severity: S3
+  layer: L2
+  owner: codeql
+  enforced_by: cs/design-patterns/complex-switch-candidate-for-strategy
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Modifiability
+  rationale: Tip veya enum üzerinde büyüyen switch blokları her yeni durumda açık/kapalı ilkesini ihlal eder.
+  remediation: Her dalı ayrı bir Strategy uygulamasına taşı ve seçimi fabrikaya devret.
+  exceptions_allowed: true
+- id: R-GOF-008
+  text: Tek Unit of Work sınırında birden fazla SaveChanges çağrılamaz
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: cs/design-patterns/unit-of-work-multiple-saves
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-662
+    iso25010:
+    - Reliability/Integrity
+  rationale: Aynı iş biriminde birden fazla kaydetme, kısmi commit ve tutarsız veri riski doğurur.
+  remediation: Tüm değişiklikleri tek SaveChangesAsync çağrısında topla veya açık transaction kullan.
+  exceptions_allowed: false
+- id: R-CQ-001
+  text: Döngü koşulu sabit ifadeyle sonsuz olamaz
+  severity: S1
+  layer: L2
+  owner: codeql
+  enforced_by: cs/sonarqube/infinite-loop-constant-condition
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    cwe:
+    - CWE-835
+    iso25010:
+    - Reliability/FaultTolerance
+  rationale: Sabit koşullu döngüler CPU tüketir ve servis kullanılamazlığına yol açar.
+  remediation: Döngü koşulunu değişken duruma bağla veya açık bir çıkış koşulu ekle.
+  exceptions_allowed: false
+- id: R-CQ-002
+  text: Gereksiz null kontrolü bulunamaz
+  severity: S3
+  layer: L2
+  owner: codeql
+  enforced_by: cs/sonarqube/redundant-null-check
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Nullable referans tipleri etkinken gereksiz null kontrolleri ölü koddur ve okunurluğu düşürür.
+  remediation: Gereksiz kontrolü kaldır veya nullable açıklamasını düzelt.
+  exceptions_allowed: true
+- id: R-CQ-003
+  text: Kullanılmayan private alan bırakılamaz
+  severity: S3
+  layer: L2
+  owner: codeql
+  enforced_by: cs/sonarqube/unused-private-field
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Analysability
+  rationale: Kullanılmayan alanlar ölü koddur; bakım yükü yaratır ve yanlış varsayımlara yol açar.
+  remediation: Alanı kaldır veya gerçekten gerekliyse kullan.
+  exceptions_allowed: true
+- id: R-CQ-004
+  text: Public alan yerine kapsüllenmiş property kullanılmalı
+  severity: S2
+  layer: L1
+  owner: codeql
+  enforced_by: cs/sonarqube/public-field-encapsulation-violation
+  maturity: stable
+  fixture_proven: false
+  fp_rate: 0.02
+  standards:
+    iso25010:
+    - Maintainability/Modularity
+    msfdg:
+    - Member Design
+  rationale: Public alanlar değişmezleri koruyamaz ve ikili uyumluluğu kırmadan propertyye dönüştürülemez.
+  remediation: Alanı private yap ve dışarıya property üzerinden aç.
+  exceptions_allowed: true

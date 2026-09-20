@@ -1,0 +1,10 @@
+# FIXTURE: Uyumlu CI - sıfır bulgu vermelidir.
+name: ci-compliant
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

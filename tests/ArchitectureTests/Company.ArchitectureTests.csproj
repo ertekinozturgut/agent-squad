@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- Hedef çerçeve kökteki Directory.Build.props üzerinden merkezî yönetilir (R-NET-062). -->
+    <TargetFramework>$(SquadTargetFramework)</TargetFramework>
+    <RootNamespace>Company.ArchitectureTests</RootNamespace>
+    <AssemblyName>Company.ArchitectureTests</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NoWarn>$(NoWarn);CA1707;CA1822;S2325;IDE0060;IDE0022;CS1591</NoWarn>
+    <!-- CS1591: fixture tiplerinde XML dokümantasyonu zorunlu değildir. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,4 +22,17 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+
+  <!--
+    Hedef projeye uyarlanırken denetlenecek ürün projeleri buraya eklenir; böylece
+    ArchitectureRulesTests.ProductAssemblies() gerçek katmanları yükleyebilir.
+    Örnek:
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\Company.Domain\Company.Domain.csproj" />
+      <ProjectReference Include="..\..\src\Company.Application\Company.Application.csproj" />
+      <ProjectReference Include="..\..\src\Company.Infrastructure\Company.Infrastructure.csproj" />
+      <ProjectReference Include="..\..\src\Company.Api\Company.Api.csproj" />
+    </ItemGroup>
+  -->
+
 </Project>

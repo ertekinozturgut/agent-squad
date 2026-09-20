@@ -12,12 +12,25 @@
 
 import csharp
 
-from Field f, Property p, IfStmt is1, LockStmt ls, IfStmt is2
+/*
+ * R-GOF-006.
+ *
+ * Aranan desen: statik, volatile OLMAYAN bir alanın önce kilit dışında, sonra
+ * kilit içinde kontrol edilmesi (double-checked locking). Singleton backing
+ * field'ı tanımı gereği STATİKTİR; alanı statik olmayanlarla sınırlamak kuralı
+ * sessizce etkisiz bırakır.
+ */
+from Field f, IfStmt outerCheck, LockStmt lockStmt, IfStmt innerCheck
 where
-  p.getAnAccess() = f.getAnAccess() and
-  is1.getEnclosingCallable() = p.getGetter() and
-  ls.getEnclosingStmt() = is1.getThen() and
-  is2.getEnclosingStmt() = ls.getBlock() and
+  f.isStatic() and
   not f.isVolatile() and
-  not f.isStatic()
-select f, "Design Pattern: Singleton field $@ is used in double-checked locking without being marked as 'volatile'. Use Lazy<T> instead.", f, f.getName()
+  // 1) Kilit dışındaki ilk kontrol
+  outerCheck.getCondition().getAChildExpr*() = f.getAnAccess() and
+  // 2) İlk kontrolün gövdesindeki lock bloğu
+  lockStmt.getParent+() = outerCheck.getThen() and
+  // 3) Lock bloğu içindeki ikinci kontrol
+  innerCheck.getParent+() = lockStmt.getBlock() and
+  innerCheck.getCondition().getAChildExpr*() = f.getAnAccess()
+select f,
+  "Design Pattern (R-GOF-006): Singleton field $@ is used in double-checked locking without being marked 'volatile'. Use Lazy<T> instead.",
+  f, f.getName()

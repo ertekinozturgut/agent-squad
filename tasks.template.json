@@ -1,6 +1,5 @@
 [
   {
-    "$schema": "./tasks.schema.json",
     "id": "TASK-01",
     "title": "Görev Başlığı (Örn: Kullanıcı Kimlik Doğrulama Modülü)",
     "description": "Görevin detaylı iş gereksinimleri, teslim edilecek iş değeri ve mimari beklentiler.",
@@ -33,18 +32,18 @@
       "uiDesignTokens": [],
       "testsWritten": [],
       "securityAuditPassed": false,
-      "mutationScore": 100.0,
+      "mutationScore": 0,
       "standardTraceability": [
         "ASVS-V14",
         "ISO25010-Security",
         "KVKK-m12"
       ],
       "toolAuditResults": {
-        "archunit": "pass",
-        "opengrep": "pass",
-        "codeql": "pass",
-        "stryker": "pass",
-        "roslyn": "pass"
+        "archunit": "skip",
+        "opengrep": "skip",
+        "codeql": "skip",
+        "stryker": "skip",
+        "roslyn": "skip"
       },
       "suppressions": []
     }
