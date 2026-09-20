@@ -32,14 +32,16 @@ Ajan, yukarıdaki komutu aldığında sırasıyla şu 4 adımı otonom olarak i�
 
 ### Adım 2: Kök Dizin Dosyalarının Kurulumu (Scaffolding)
 Ajan, `.agents/init.sh` scriptini çalıştırarak veya doğrudan şu dosyaları kök dizine kurar:
-- **`Directory.Build.props`**: `SonarAnalyzer`, `Roslynator`, `BannedApiAnalyzers`, `VSTHRD`, `TreatWarningsAsErrors=true` ve `AnalysisLevel=recommended`.
+- **`Directory.Build.props`**: `SonarAnalyzer`, `Roslynator`, `BannedApiAnalyzers`, `VSTHRD`, `TreatWarningsAsErrors=true` (+ S2/S3 tanıları için `WarningsNotAsErrors`), `AnalysisLevel=10.0-recommended`, `RestorePackagesWithLockFile`, `NuGetAudit`.
 - **`BannedSymbols.txt`**: `TimeProvider` zorunluluğu (`DateTime.Now/UtcNow` yasağı), `Task.Result`, MD5/SHA1/DES yasağı.
 - **`.editorconfig`**: Roslyn analizör şiddet eşlemeleri.
 - **`nuget.config`**: Paket kaynak eşleme (`packageSourceMapping`).
-- **`stryker-config.json`**: Hedef çözümün `.sln` adıyla güncellenmiş mutasyon konfigürasyonu (`max-survived-mutants: 0`).
-- **`.opengrep/rules.yaml`**: 84 adet UDAP statik güvenlik ve temiz kod kuralı.
+- **`stryker-config.json`**: Hedef çözümün `.sln` adıyla güncellenmiş mutasyon konfigürasyonu (`thresholds.break: 100` = 0 hayatta kalan mutant).
+- **`.opengrep/rules.yaml`**: 72 adet UDAP statik güvenlik ve temiz kod kuralı (+ `.opengrep/fixtures/` öz-test korpusu).
+- **`.semgrepignore`**: Opengrep varsayılan ignore listesini değiştirir; test disiplini kurallarının çalışabilmesi için `tests/` dizini kapsam İÇİNDE tutulur.
 - **`.codeql/models/`**: CodeQL veri akışı ve taint modelleri.
 - **`tests/ArchitectureTests/`**: Hedef namespace'e uyarlanmış bağımsız ArchUnitNET C# test projesi ve fixture sınıfları.
+  > ⚠️ `ArchitectureRulesTests.ProductAssemblies()` metoduna hedef çözümün katman assembly'leri eklenmelidir; aksi halde mimari kurallar boş küme üzerinde çalışır ve sahte biçimde yeşil döner.
 - **`tasks.json`**: `tasks.template.json` şablonundan türetilmiş aktif görev kuyruğu.
 - **`docs/`**: 11 standarda bağlı izlenebilirlik matrisi ve SBOM politikası.
 
@@ -48,14 +50,14 @@ Ajan, `.agents/init.sh` scriptini çalıştırarak veya doğrudan şu dosyaları
    ```bash
    dotnet sln add tests/ArchitectureTests/*.csproj
    ```
-2. Paketleri geri yükle ve mimari testleri çalıştır:
+2. Kural kataloğu ile motor konfigürasyonları arasındaki tutarlılığı doğrula:
+   ```bash
+   bash .agents/verify.sh
+   ```
+   *(Beklenen sonuç: çıkış kodu 0; her `enforced_by` gerçek bir kapıya çözülür, her Opengrep kuralı kendi ihlal fixture'ında tetiklenir.)*
+3. Paketleri geri yükle ve mimari testleri çalıştır:
    ```bash
    dotnet test tests/ArchitectureTests/
-   ```
-   *(Beklenen sonuç: 0 hata, 8/8 test başarılı)*
-3. Opengrep kural dosyasının geçerliliğini doğrula:
-   ```bash
-   opengrep scan --config .opengrep/rules.yaml --dry-run || echo "Opengrep kural seti hazır"
    ```
 
 ### Adım 4: Kullanıcıya Raporlama ve Göreve Hazırlık

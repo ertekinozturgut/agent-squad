@@ -1,0 +1,8 @@
+# FIXTURE: CI tedarik zinciri ihlalleri.
+name: ci-fixture
+on: pull_request_target        # opengrep-ci-secrets-and-pr-target
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4      # opengrep-ci-action-pinned-by-sha

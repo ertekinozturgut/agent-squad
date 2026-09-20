@@ -1,1261 +1,1172 @@
+# ==============================================================================
+# Agent Squad v2 — Opengrep / Semgrep kural seti (UDAP .NET v2)
+#
+# Her kuralın metadata.rule_id alanı .agents/rules_registry.yaml içindeki kural
+# kimliğine bağlıdır. Kural kimlikleri (id) registry'deki `enforced_by` alanıyla
+# birebir aynı olmak zorundadır; `.agents/verify.sh` bu eşleşmeyi doğrular.
+#
+# Tasarım ilkeleri:
+#   1. Kurallar DAİMA ihlali yakalar, doğru uygulamayı değil (ters kural yasak).
+#   2. Katman kapsamı `paths.include` ile verilir (namespace deseni yerine);
+#      böylece file-scoped namespace ve klasör tabanlı dikey dilimler de kapsanır.
+#   3. Var olan doğru kullanımlar `pattern-not` ile elenir (yanlış pozitif azaltma).
+#   4. Test kodu yalnızca test kuralları tarafından taranır.
+#
+# Doğrulama:  bash .agents/verify.sh      (fixture tabanlı öz-test dahil)
+# ==============================================================================
 rules:
+
+# ---------------------------------------------------------------------------
+# Katman saflığı — Domain katmanında yasaklı bağımlılıklar
+# (R-ARCH-003 / R-NET-054 için ikincil savunma; birincil kapı ArchUnitNET)
+# ---------------------------------------------------------------------------
 - id: banned-import-domain-microsoft-entityframeworkcore
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''Microsoft.EntityFrameworkCore''
-    referansı kesinlikle yasaktır.'
+  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''Microsoft.EntityFrameworkCore'' referansı kesinlikle yasaktır.'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
-  - pattern: using Microsoft.EntityFrameworkCore;
-  - pattern-inside: namespace $...Domain { ... }
+  - pattern-regex: '(?m)^[ \t]*using[ \t]+(global::)?Microsoft\.EntityFrameworkCore(\.[A-Za-z0-9_.]+)?[ \t]*;'
   metadata:
+    rule_id: R-ARCH-003
+    severity: S1
     category: architecture
     standards:
-    - ISO 25010/Maintainability
-    - Clean Architecture
+      iso25010: ['Flexibility/Replaceability']
+
 - id: banned-import-domain-microsoft-aspnetcore
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''Microsoft.AspNetCore'' referansı
-    kesinlikle yasaktır.'
+  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''Microsoft.AspNetCore'' referansı kesinlikle yasaktır.'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
-  - pattern: using Microsoft.AspNetCore;
-  - pattern-inside: namespace $...Domain { ... }
+  - pattern-regex: '(?m)^[ \t]*using[ \t]+(global::)?Microsoft\.AspNetCore(\.[A-Za-z0-9_.]+)?[ \t]*;'
   metadata:
+    rule_id: R-ARCH-003
+    severity: S1
     category: architecture
     standards:
-    - ISO 25010/Maintainability
-    - Clean Architecture
+      iso25010: ['Flexibility/Replaceability']
+
 - id: banned-import-domain-system-data
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''System.Data'' referansı kesinlikle
-    yasaktır.'
+  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''System.Data'' referansı kesinlikle yasaktır.'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
-  - pattern: using System.Data;
-  - pattern-inside: namespace $...Domain { ... }
+  - pattern-regex: '(?m)^[ \t]*using[ \t]+(global::)?System\.Data(\.[A-Za-z0-9_.]+)?[ \t]*;'
   metadata:
+    rule_id: R-ARCH-003
+    severity: S1
     category: architecture
     standards:
-    - ISO 25010/Maintainability
-    - Clean Architecture
+      iso25010: ['Flexibility/Replaceability']
+
 - id: banned-import-domain-system-io
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''System.IO'' referansı kesinlikle
-    yasaktır.'
+  message: 'R-NET-054: Domain katmanında ''System.IO'' referansı kesinlikle yasaktır (saf domain kuralı).'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
-  - pattern: using System.IO;
-  - pattern-inside: namespace $...Domain { ... }
+  - pattern-regex: '(?m)^[ \t]*using[ \t]+(global::)?System\.IO(\.[A-Za-z0-9_.]+)?[ \t]*;'
   metadata:
+    rule_id: R-NET-054
+    severity: S1
     category: architecture
     standards:
-    - ISO 25010/Maintainability
-    - Clean Architecture
+      iso25010: ['Maintainability/Modularity']
+
 - id: banned-import-domain-system-net-http
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''System.Net.Http'' referansı
-    kesinlikle yasaktır.'
+  message: 'R-NET-054: Domain katmanında ''System.Net.Http'' referansı kesinlikle yasaktır (saf domain kuralı).'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
-  - pattern: using System.Net.Http;
-  - pattern-inside: namespace $...Domain { ... }
+  - pattern-regex: '(?m)^[ \t]*using[ \t]+(global::)?System\.Net\.Http(\.[A-Za-z0-9_.]+)?[ \t]*;'
   metadata:
+    rule_id: R-NET-054
+    severity: S1
     category: architecture
     standards:
-    - ISO 25010/Maintainability
-    - Clean Architecture
+      iso25010: ['Maintainability/Modularity']
+
 - id: banned-import-domain-azure-messaging
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''Azure.Messaging'' referansı
-    kesinlikle yasaktır.'
+  message: 'R-NET-054 / R-ARCH-003: Domain katmanında ''Azure.Messaging'' referansı kesinlikle yasaktır.'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
-  - pattern: using Azure.Messaging;
-  - pattern-inside: namespace $...Domain { ... }
+  - pattern-regex: '(?m)^[ \t]*using[ \t]+(global::)?Azure\.Messaging(\.[A-Za-z0-9_.]+)?[ \t]*;'
   metadata:
+    rule_id: R-ARCH-003
+    severity: S1
     category: architecture
     standards:
-    - ISO 25010/Maintainability
-    - Clean Architecture
+      iso25010: ['Flexibility/Replaceability']
+
+# ---------------------------------------------------------------------------
+# SOLID / Temiz Kod
+# ---------------------------------------------------------------------------
 - id: opengrep-no-notimplemented-exception
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-SOLID-004: NotImplementedException üretim kodunda bulunamaz; arayüz
-    segregasyonu (ISP) uygulayın veya metodu somutlaştırın.'
+  message: 'R-SOLID-004: NotImplementedException üretim kodunda bulunamaz; arayüz segregasyonu (ISP) uygulayın veya metodu somutlaştırın.'
+  paths:
+    exclude: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: throw new NotImplementedException($...ARGS);
+  - pattern-either:
+    - pattern: throw new NotImplementedException($...ARGS);
+    - pattern: throw new NotSupportedException($...ARGS);
   metadata:
     rule_id: R-SOLID-004
     severity: S1
     standards:
-      cwe:
-      - CWE-670
-      iso25010:
-      - Reliability/FaultTolerance
-- id: opengrep-class-and-method-length-limits
-  languages:
-  - csharp
-  severity: INFO
-  message: 'R-SOLID-010: Sınıf boyutu ≤ 400 satır, metot boyutu ≤ 60 satır sınırına
-    uymalıdır.'
-  patterns:
-  - pattern: class  { ... }
-  metadata:
-    rule_id: R-SOLID-010
-    severity: S3
-    standards:
-      iso25010:
-      - Maintainability/Analysability
+      cwe: ['CWE-670']
+      iso25010: ['Reliability/FaultTolerance']
+
+# ---------------------------------------------------------------------------
+# Asenkron / eşzamanlılık
+# ---------------------------------------------------------------------------
 - id: opengrep-cancellation-token-propagation
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-004: Asenkron I/O metot imzalarında CancellationToken ct = default
-    bulunmalı ve alt çağrılara iletilmelidir.'
+  message: 'R-NET-004: Asenkron I/O metot imzalarında CancellationToken ct = default bulunmalı ve alt çağrılara iletilmelidir.'
+  paths:
+    exclude: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: async Task ($...PARAMS) { ... }
+  - pattern-either:
+    - pattern: async Task $M(...) { ... }
+    - pattern: async Task<$R> $M(...) { ... }
+  - pattern-not: async Task $M(..., CancellationToken $CT, ...) { ... }
+  - pattern-not: async Task<$R> $M(..., CancellationToken $CT, ...) { ... }
+  - pattern-not: async Task $M(..., CancellationToken $CT = default, ...) { ... }
+  - pattern-not: async Task<$R> $M(..., CancellationToken $CT = default, ...) { ... }
   metadata:
     rule_id: R-NET-004
     severity: S1
     standards:
-      cwe:
-      - CWE-400
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-400']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-no-await-in-lock
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-006: lock bloğu içinde await kullanılamaz; SemaphoreSlim.WaitAsync
-    tercih edilmelidir.'
+  message: 'R-NET-006: lock bloğu içinde asenkron çağrı senkron olarak beklenemez (deadlock); SemaphoreSlim.WaitAsync kullanın.'
   patterns:
-  - pattern: lock () { ... await ; ... }
+  - pattern-inside: 'lock ($L) { ... }'
+  - pattern-either:
+    - pattern: $X.Result
+    - pattern: $X.Wait()
+    - pattern: $X.GetAwaiter().GetResult()
   metadata:
     rule_id: R-NET-006
     severity: S1
     standards:
-      cwe:
-      - CWE-833
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-833']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-semaphore-released-in-finally
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-070: SemaphoreSlim / Mutex serbest bırakma çağrıları (Release) daima
-    finally bloğunda yapılmalıdır.'
+  message: 'R-NET-070: SemaphoreSlim / Mutex serbest bırakma çağrıları (Release) daima finally bloğunda yapılmalıdır.'
   patterns:
-  - pattern: .WaitAsync(...); ... .Release();
+  - pattern-either:
+    - pattern: $S.Release();
+    - pattern: $S.ReleaseMutex();
+  - pattern-not-inside: 'try { ... } finally { ... }'
+  - pattern-not-inside: 'using ($U) { ... }'
   metadata:
     rule_id: R-NET-070
     severity: S1
     standards:
-      cwe:
-      - CWE-667
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-667']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-parallel-no-async-lambda
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-071: Parallel.ForEach içinde async lambda kullanılamaz; Parallel.ForEachAsync
-    kullanılmalıdır.'
+  message: 'R-NET-071: Parallel.ForEach / Parallel.For içinde async lambda kullanılamaz (fire-and-forget); Parallel.ForEachAsync kullanın.'
   patterns:
-  - pattern: Parallel.ForEach(, async () => { ... });
+  - pattern-either:
+    - pattern: Parallel.ForEach($C, async ($X) => { ... });
+    - pattern: Parallel.ForEach($C, async $X => { ... });
+    - pattern: Parallel.For($A, $B, async ($X) => { ... });
+    - pattern: Parallel.For($A, $B, async $X => { ... });
   metadata:
     rule_id: R-NET-071
     severity: S2
     standards:
-      iso25010:
-      - Reliability/Concurrency
+      iso25010: ['Reliability/Concurrency']
+
 - id: opengrep-threadstatic-asynclocal-audit
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-072: ThreadStatic ve AsyncLocal kullanımı gerekçelendirilmeli ve
-    bellek sızıntısına karşı denetlenmelidir.'
+  message: 'R-NET-072: ThreadStatic ve AsyncLocal kullanımı gerekçelendirilmeli ve bellek sızıntısına karşı denetlenmelidir.'
   patterns:
-  - pattern: '[ThreadStatic] ...;'
-  - pattern: AsyncLocal<> ;
+  - pattern-either:
+    - pattern-regex: '(?m)^[ \t]*\[ThreadStatic\]'
+    - pattern-regex: '\bnew[ \t]+AsyncLocal<'
   metadata:
     rule_id: R-NET-072
     severity: S2
     standards:
-      cwe:
-      - CWE-362
-      iso25010:
-      - Reliability/Concurrency
+      cwe: ['CWE-362']
+      iso25010: ['Reliability/Concurrency']
+
 - id: opengrep-bounded-collections
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-073: Sınırsız bellek büyümesini önlemek için kuyruklar daima sınırlandırılmış
-    (bounded) olmalıdır.'
+  message: 'R-NET-073: Sınırsız bellek büyümesini önlemek için kuyruklar daima sınırlandırılmış (bounded) olmalıdır.'
   patterns:
-  - pattern: Channel.CreateUnbounded<>($...ARGS)
+  - pattern-either:
+    - pattern: Channel.CreateUnbounded<$T>($...ARGS)
+    - pattern: new BlockingCollection<$T>()
   metadata:
     rule_id: R-NET-073
     severity: S2
     standards:
-      cwe:
-      - CWE-770
-      iso25010:
-      - Reliability/ResourceUtilization
+      cwe: ['CWE-770']
+      iso25010: ['Reliability/ResourceUtilization']
+
+# ---------------------------------------------------------------------------
+# İstisna yönetimi ve loglama
+# ---------------------------------------------------------------------------
 - id: opengrep-meaningful-exception-logging
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-SEC-001: Yakalanan istisnalar Information yerine Error/Warning seviyesinde
-    ve tam yığın iziyle loglanmalıdır.'
+  message: 'R-SEC-001: Yakalanan istisnalar Information/Debug yerine Error veya Warning seviyesinde ve tam yığın iziyle loglanmalıdır.'
   patterns:
-  - pattern: catch () { .LogInformation($...ARGS); }
+  - pattern-inside: 'try { ... } catch ($T $E) { ... }'
+  - pattern-either:
+    - pattern: $L.LogInformation($...ARGS)
+    - pattern: $L.LogDebug($...ARGS)
+    - pattern: $L.LogTrace($...ARGS)
   metadata:
     rule_id: R-SEC-001
     severity: S2
     standards:
-      cwe:
-      - CWE-390
-      iso25010:
-      - Reliability/Analysability
+      cwe: ['CWE-390']
+      iso25010: ['Reliability/Analysability']
+
 - id: opengrep-no-throw-ex-rethrow
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-SEC-002: throw ex kullanımı çağrı yığınını sıfırlar; orijinal yığını
-    korumak için çıplak throw; kullanılmalıdır.'
+  message: 'R-SEC-002: ''throw ex;'' kullanımı çağrı yığınını sıfırlar; orijinal yığını korumak için çıplak ''throw;'' kullanılmalıdır.'
   patterns:
-  - pattern: catch ( ) { ... throw ; }
+  - pattern: try { ... } catch ($T $E) { ... throw $E; ... }
   metadata:
     rule_id: R-SEC-002
     severity: S2
     standards:
-      cwe:
-      - CWE-703
-      iso25010:
-      - Reliability/Analysability
+      cwe: ['CWE-703']
+      iso25010: ['Reliability/Analysability']
+
 - id: opengrep-no-throw-raw-exception
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-SEC-003: Ham Exception veya SystemException fırlatmak yasaktır; spesifik
-    domain istisnası veya Result.Failure kullanın.'
+  message: 'R-SEC-003: Ham Exception / SystemException / ApplicationException fırlatmak yasaktır; spesifik domain istisnası veya Result.Failure kullanın.'
   patterns:
-  - pattern: throw new Exception($...ARGS);
-  - pattern: throw new SystemException($...ARGS);
+  - pattern-either:
+    - pattern: throw new Exception($...ARGS);
+    - pattern: throw new SystemException($...ARGS);
+    - pattern: throw new ApplicationException($...ARGS);
   metadata:
     rule_id: R-SEC-003
     severity: S2
     standards:
-      cwe:
-      - CWE-397
-      iso25010:
-      - Maintainability/Analysability
+      cwe: ['CWE-397']
+      iso25010: ['Maintainability/Analysability']
+
 - id: opengrep-do-not-swallow-operationcanceled
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-SEC-004: OperationCanceledException yutulamaz; akış derhal sonlandırılmalı
-    veya hata yeniden fırlatılmalıdır.'
+  message: 'R-SEC-004: OperationCanceledException yutulamaz; akış derhal sonlandırılmalı veya hata yeniden fırlatılmalıdır.'
   patterns:
-  - pattern: catch (OperationCanceledException) { }
-  - pattern: catch (TaskCanceledException) { }
+  - pattern-either:
+    - pattern: try { ... } catch (OperationCanceledException) { }
+    - pattern: try { ... } catch (OperationCanceledException $E) { }
+    - pattern: try { ... } catch (TaskCanceledException) { }
+    - pattern: try { ... } catch (TaskCanceledException $E) { }
   metadata:
     rule_id: R-SEC-004
     severity: S1
     standards:
-      iso25010:
-      - Reliability/FaultTolerance
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-do-not-catch-fatal-exceptions
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-SEC-005: Kritik sistem istisnaları (OutOfMemory, StackOverflow) yakalanıp
-    yutulamaz.'
+  message: 'R-SEC-005: Kritik sistem istisnaları (OutOfMemory, StackOverflow, ExecutionEngine) yakalanıp yutulamaz.'
   patterns:
-  - pattern: catch (OutOfMemoryException) { ... }
-  - pattern: catch (StackOverflowException) { ... }
-  - pattern: catch (ExecutionEngineException) { ... }
+  - pattern-either:
+    - pattern: try { ... } catch (OutOfMemoryException) { ... }
+    - pattern: try { ... } catch (OutOfMemoryException $E) { ... }
+    - pattern: try { ... } catch (StackOverflowException) { ... }
+    - pattern: try { ... } catch (StackOverflowException $E) { ... }
+    - pattern: try { ... } catch (ExecutionEngineException) { ... }
+    - pattern: try { ... } catch (ExecutionEngineException $E) { ... }
   metadata:
     rule_id: R-SEC-005
     severity: S1
     standards:
-      cwe:
-      - CWE-390
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-390']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-no-exception-leak-to-client
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-SEC-006: İç sistem istisna detayları ve stack trace istemciye ham dönemez
-    (CWE-209).'
+  message: 'R-SEC-006: İç sistem istisna detayları ve stack trace istemciye ham dönemez (CWE-209); RFC 7807 ProblemDetails kullanın.'
   patterns:
-  - pattern: return StatusCode(500, .ToString());
-  - pattern: return Problem(.StackTrace);
+  - pattern-either:
+    - pattern: StatusCode($CODE, $E.ToString())
+    - pattern: StatusCode($CODE, $E.StackTrace)
+    - pattern: Problem($E.StackTrace)
+    - pattern: Problem($E.ToString())
+    - pattern: BadRequest($E.StackTrace)
+    - pattern: Content($E.StackTrace)
   metadata:
     rule_id: R-SEC-006
     severity: S2
     standards:
-      cwe:
-      - CWE-209
-      asvs:
-      - V16
+      cwe: ['CWE-209']
+      asvs: ['V16']
+
 - id: opengrep-no-empty-catch
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-SEC-007: Boş catch bloğu kesinlikle yasaktır (CWE-390); hata loglanmalı
-    veya yönetilmelidir.'
+  message: 'R-SEC-007: Boş catch bloğu kesinlikle yasaktır (CWE-390); hata loglanmalı veya yönetilmelidir.'
   patterns:
-  - pattern: catch () { }
-  - pattern: catch { }
+  - pattern-either:
+    - pattern: try { ... } catch { }
+    - pattern: try { ... } catch ($T) { }
+    - pattern: try { ... } catch ($T $E) { }
   metadata:
     rule_id: R-SEC-007
     severity: S1
     standards:
-      cwe:
-      - CWE-390
-      - CWE-703
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-390', 'CWE-703']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-catch-specific-exception-types
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-080: catch bloğu yalnızca spesifik istisna tiplerini yakalamalıdır;
-    genel catch loglayıp yeniden fırlatmalıdır.'
+  message: 'R-NET-080: catch bloğu yalnızca spesifik istisna tiplerini yakalamalıdır; genel catch loglayıp yeniden fırlatmalıdır.'
   patterns:
-  - pattern: catch (Exception) { ... }
+  - pattern-either:
+    - pattern: try { ... } catch (Exception $E) { ... }
+    - pattern: try { ... } catch (Exception) { ... }
+  - pattern-not: try { ... } catch (Exception $E) { ... throw; }
+  - pattern-not: try { ... } catch (Exception $E) { ... throw $NEW; }
   metadata:
     rule_id: R-NET-080
     severity: S2
     standards:
-      cwe:
-      - CWE-396
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-396']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-exception-filters-no-side-effects
-  languages:
-  - csharp
+  languages: [csharp]
   severity: INFO
-  message: 'R-NET-081: Exception filtreleri yan etki içeremez; yalnızca saf durum
-    kontrolü yapmalıdır.'
+  message: 'R-NET-081: Exception filtreleri (catch ... when) yan etki içeremez; yalnızca saf durum kontrolü yapmalıdır.'
   patterns:
-  - pattern: catch () when ((...))
+  - pattern-regex: '(?m)\bwhen[ \t]*\([^)]*\.(Log\w+|Write\w*|Save\w*|Send\w*)[ \t]*\('
   metadata:
     rule_id: R-NET-081
     severity: S3
     standards:
-      cwe:
-      - CWE-703
-      iso25010:
-      - Reliability/FaultTolerance
-- id: opengrep-security-events-logged
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-NET-083: Güvenlik olayları (oturum açma başarısızlığı, yetki reddi)
-    açıkça audit loguna yazılmalıdır.'
-  patterns:
-  - pattern: class  { ... }
-  metadata:
-    rule_id: R-NET-083
-    severity: S1
-    standards:
-      asvs:
-      - V16
-      iso21434:
-      - CSMS/AuditLogging
+      cwe: ['CWE-703']
+      iso25010: ['Reliability/FaultTolerance']
+
 - id: opengrep-structured-logging-no-interpolation
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-085: Loglamada string birleştirme veya interpolasyon yasaktır; yapılandırılmış
-    loglama şablonu kullanın.'
+  message: 'R-NET-085: Loglamada string birleştirme veya interpolasyon yasaktır; yapılandırılmış loglama şablonu ({Placeholder}) kullanın.'
   patterns:
-  - pattern: .LogTrace( + )
-  - pattern: .LogDebug( + )
-  - pattern: .LogInformation( + )
-  - pattern: .LogWarning( + )
-  - pattern: .LogError( + )
-  - pattern: .LogCritical( + )
+  - pattern-either:
+    - pattern-regex: '\.Log(Trace|Debug|Information|Warning|Error|Critical)[ \t]*\([ \t]*\$"'
+    - pattern-regex: '\.Log(Trace|Debug|Information|Warning|Error|Critical)[ \t]*\([^;]*"[ \t]*\+'
   metadata:
     rule_id: R-NET-085
     severity: S2
     standards:
-      iso25010:
-      - Maintainability/Analysability
+      iso25010: ['Maintainability/Analysability']
+
 - id: opengrep-log-level-convention
-  languages:
-  - csharp
+  languages: [csharp]
   severity: INFO
-  message: 'R-NET-086: İstisna nesnesi içeren log çağrıları Information değil Warning
-    veya Error seviyesinde olmalıdır.'
+  message: 'R-NET-086: İstisna nesnesi içeren log çağrıları Information/Debug değil Warning veya Error seviyesinde olmalıdır.'
   patterns:
-  - pattern: .LogInformation(, $...ARGS)
+  - pattern-either:
+    - pattern: $L.LogInformation($EX, $...ARGS)
+    - pattern: $L.LogDebug($EX, $...ARGS)
+  - metavariable-regex:
+      metavariable: $EX
+      regex: '(?i)^(ex|e|exc|exception|\w*Exception)$'
   metadata:
     rule_id: R-NET-086
     severity: S3
     standards:
-      asvs:
-      - V16
+      asvs: ['V16']
+
+# ---------------------------------------------------------------------------
+# KVKK / PII
+# ---------------------------------------------------------------------------
 - id: opengrep-pii-in-cache-key
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-PII-005: PII alanları (TCKN, Email, Telefon) önbellek anahtarında düz
-    metin olarak kullanılamaz.'
+  message: 'R-PII-005: PII alanları (TCKN, Email, Telefon, IBAN) önbellek anahtarında düz metin olarak kullanılamaz; hash''lenmiş anahtar kullanın.'
   patterns:
-  - pattern: .Set( + , ...)
+  - pattern-regex: '\.(Set|SetAsync|SetString|SetStringAsync|GetOrCreate|GetOrCreateAsync)[ \t]*\([^;]*(?i:tckn|vkn|iban|email|phone|telefon)'
   metadata:
     rule_id: R-PII-005
     severity: S2
     standards:
-      cwe:
-      - CWE-524
-      kvkk:
-      - m.12 veri güvenliği
+      cwe: ['CWE-524']
+      kvkk: ['m.12 veri güvenliği']
+
 - id: opengrep-pii-in-url-query
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-PII-006: PII alanları URL query string içinde taşınamaz (CWE-598); POST
-    gövdesinde şifreli taşınmalıdır.'
+  message: 'R-PII-006: PII alanları URL query string içinde taşınamaz (CWE-598); POST gövdesinde şifreli taşınmalıdır.'
   patterns:
-  - pattern: Request.Query["tckn"]
-  - pattern: Request.Query["email"]
-  - pattern: Request.Query["phone"]
-  - pattern: Request.Query["iban"]
+  - pattern-regex: 'Request\.Query\[[ \t]*"(?i:tckn|vkn|iban|email|phone|telefon|plaka|plate)"'
   metadata:
     rule_id: R-PII-006
     severity: S1
     standards:
-      cwe:
-      - CWE-598
-      asvs:
-      - V14
-      kvkk:
-      - m.12 veri güvenliği
+      cwe: ['CWE-598']
+      asvs: ['V14']
+      kvkk: ['m.12 veri güvenliği']
+
 - id: opengrep-tostring-no-pii
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-PII-008: ToString() metotları PII alanlarını maskelemeden düz metin
-    sızdıramaz.'
+  message: 'R-PII-008: ToString() metotları PII alanlarını maskelemeden düz metin sızdıramaz; Redactor.Mask kullanın.'
   patterns:
-  - pattern: public override string ToString() { return ... + Tckn + ...; }
+  - pattern-inside: 'public override string ToString() { ... }'
+  - pattern-regex: '\b(Tckn|Vkn|Iban|DriverLicenseNo|ChassisNo|EngineNo)\b'
+  - pattern-not-regex: '\bMask[ \t]*\('
   metadata:
     rule_id: R-PII-008
     severity: S2
     standards:
-      cwe:
-      - CWE-532
-      kvkk:
-      - m.12 veri güvenliği
+      cwe: ['CWE-532']
+      kvkk: ['m.12 veri güvenliği']
+
 - id: opengrep-no-real-pii-in-tests
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-PII-009: Test fixture''larında gerçek kişisel veri kullanılamaz; Bogus
-    ile sentetik veri üretilmelidir.'
+  message: 'R-PII-009: Test fixture''larında gerçek kişisel veri (TCKN/VKN formatlı sabitler) kullanılamaz; Bogus ile sentetik veri üretilmelidir.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: '11111111110'
-  - pattern: '12345678901'
+  - pattern-regex: '"[1-9][0-9]{10}"'
   metadata:
     rule_id: R-PII-009
     severity: S1
     standards:
-      kvkk:
-      - m.4 genel ilkeler
+      kvkk: ['m.4 genel ilkeler']
+
+# ---------------------------------------------------------------------------
+# Kimlik doğrulama / yetkilendirme
+# ---------------------------------------------------------------------------
 - id: opengrep-allow-anonymous-comment-justification
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-AUTH-002: [AllowAnonymous] kullanılan her endpoint üzerinde iş gerekçesini
-    açıklayan bir açıklama bulunmalıdır.'
+  message: 'R-AUTH-002: [AllowAnonymous] kullanılan her endpoint üzerinde iş gerekçesini açıklayan bir yorum satırı bulunmalıdır.'
   patterns:
-  - pattern: '[AllowAnonymous]'
+  - pattern-regex: '(?m)^(?![ \t]*//)[ \t]*\[AllowAnonymous\]'
   metadata:
     rule_id: R-AUTH-002
     severity: S2
     standards:
-      asvs:
-      - V8
+      asvs: ['V8']
+
 - id: opengrep-jwt-validation-parameters
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-AUTH-004: JWT doğrulamasında ValidateIssuer, ValidateAudience ve ValidateLifetime
-    açıkça true olmalıdır.'
+  message: 'R-AUTH-004: JWT doğrulamasında ValidateIssuer, ValidateAudience ve ValidateLifetime açıkça true olmalıdır.'
   patterns:
-  - pattern: ValidateIssuer = false
-  - pattern: ValidateAudience = false
-  - pattern: ValidateLifetime = false
+  - pattern-either:
+    - pattern: ValidateIssuer = false
+    - pattern: ValidateAudience = false
+    - pattern: ValidateLifetime = false
+    - pattern: ValidateIssuerSigningKey = false
   metadata:
     rule_id: R-AUTH-004
     severity: S1
     standards:
-      asvs:
-      - V9
-      cwe:
-      - CWE-347
+      asvs: ['V9']
+      cwe: ['CWE-347']
+
 - id: opengrep-jwt-require-https-metadata
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-AUTH-005: JWT yapılandırmasında RequireHttpsMetadata = false yapılması
-    kesinlikle yasaktır.'
+  message: 'R-AUTH-005: JWT yapılandırmasında RequireHttpsMetadata = false yapılması kesinlikle yasaktır.'
   patterns:
   - pattern: RequireHttpsMetadata = false
   metadata:
     rule_id: R-AUTH-005
     severity: S1
     standards:
-      asvs:
-      - V12
-      cwe:
-      - CWE-319
+      asvs: ['V12']
+      cwe: ['CWE-319']
+
 - id: opengrep-roles-from-constants
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-AUTH-007: Rol isimleri magic string olamaz; strongly-typed sabitlerden
-    gelmelidir (Roles.Admin).'
+  message: 'R-AUTH-007: Rol isimleri magic string olamaz; strongly-typed sabitlerden gelmelidir (Roles.Admin).'
   patterns:
-  - pattern: '[Authorize(Roles = "Admin")]'
-  - pattern: '[Authorize(Roles = "User")]'
+  - pattern-regex: '\[Authorize\([^)]*Roles[ \t]*=[ \t]*"'
   metadata:
     rule_id: R-AUTH-007
     severity: S2
     standards:
-      iso25010:
-      - Maintainability/Modifiability
+      iso25010: ['Maintainability/Modifiability']
+
+# ---------------------------------------------------------------------------
+# Enjeksiyon ve serileştirme
+# ---------------------------------------------------------------------------
 - id: opengrep-xml-reader-dtd-disabled
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-INJ-005: XML okuyucularda DTD parsing açık bırakılamaz; DtdProcessing.Prohibit
-    zorunludur (XXE).'
+  message: 'R-INJ-005: XML okuyucularda DTD parsing açık bırakılamaz; DtdProcessing.Prohibit zorunludur (XXE).'
   patterns:
-  - pattern: DtdProcessing = DtdProcessing.Parse
+  - pattern-either:
+    - pattern: DtdProcessing = DtdProcessing.Parse
+    - pattern: XmlResolver = new XmlUrlResolver()
   metadata:
     rule_id: R-INJ-005
     severity: S1
     standards:
-      cwe:
-      - CWE-611
-      owasp_top10:
-      - A05:2021
+      cwe: ['CWE-611']
+      owasp_top10: ['A05:2021']
+
 - id: opengrep-typenamehandling-prohibited
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-INJ-006: JSON deserialization işlemlerinde TypeNameHandling.All veya
-    Auto kullanımı kesinlikle yasaktır (RCE).'
+  message: 'R-INJ-006: JSON deserialization işlemlerinde TypeNameHandling.All / Auto / Objects kullanımı kesinlikle yasaktır (RCE).'
   patterns:
-  - pattern: TypeNameHandling = TypeNameHandling.All
-  - pattern: TypeNameHandling = TypeNameHandling.Auto
+  - pattern-either:
+    - pattern: TypeNameHandling = TypeNameHandling.All
+    - pattern: TypeNameHandling = TypeNameHandling.Auto
+    - pattern: TypeNameHandling = TypeNameHandling.Objects
   metadata:
     rule_id: R-INJ-006
     severity: S1
     standards:
-      cwe:
-      - CWE-502
-      owasp_top10:
-      - A08:2021
+      cwe: ['CWE-502']
+      owasp_top10: ['A08:2021']
+
 - id: opengrep-regex-injection-and-redos
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-INJ-008: Regex kullanıcı girdisinden derlenemez; Regex timeout tanımlanmalıdır
-    (ReDoS).'
+  message: 'R-INJ-008: Regex nesneleri timeout olmadan oluşturulamaz (ReDoS); new Regex(pattern, options, TimeSpan) kullanın.'
   patterns:
-  - pattern: new Regex()
+  - pattern-either:
+    - pattern: new Regex($P)
+    - pattern: new Regex($P, $O)
   metadata:
     rule_id: R-INJ-008
     severity: S2
     standards:
-      cwe:
-      - CWE-1333
+      cwe: ['CWE-1333']
+
 - id: opengrep-deserialization-depth-limit
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-INJ-010: Deserialization işlemlerinde maksimum derinlik ve boyut sınırı
-    tanımlanmalıdır.'
+  message: 'R-INJ-010: Deserialization işlemlerinde maksimum derinlik sınırı kaldırılamaz (MaxDepth = null / 0).'
   patterns:
-  - pattern: MaxDepth = 0
+  - pattern-either:
+    - pattern: MaxDepth = null
+    - pattern: MaxDepth = 0
   metadata:
     rule_id: R-INJ-010
     severity: S2
     standards:
-      cwe:
-      - CWE-400
+      cwe: ['CWE-400']
+
+# ---------------------------------------------------------------------------
+# Kriptografi
+# ---------------------------------------------------------------------------
 - id: opengrep-secure-password-hashing
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CRY-004: Parola saklamada ham SHA yasaktır; Argon2id, PBKDF2 veya bcrypt
-    kullanılmalıdır.'
+  message: 'R-CRY-004: Parola saklamada ham SHA/MD5 yasaktır; Argon2id, PBKDF2 veya bcrypt kullanılmalıdır.'
   patterns:
-  - pattern: SHA256.HashData(Encoding.UTF8.GetBytes())
+  - pattern-regex: '\b(MD5|SHA1|SHA256|SHA384|SHA512)[ \t]*\.[ \t]*(HashData|ComputeHash)[ \t]*\([^;]*(?i:password|parola|pwd|sifre|şifre)'
   metadata:
     rule_id: R-CRY-004
     severity: S1
     standards:
-      cwe:
-      - CWE-916
-      asvs:
-      - V11
+      cwe: ['CWE-916']
+      asvs: ['V11']
+
 - id: opengrep-no-certificate-validation-bypass
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
   message: 'R-CRY-005: SSL/TLS sertifika doğrulaması bypass edilemez (CWE-295).'
   patterns:
-  - pattern: ServerCertificateCustomValidationCallback = (, , , ) => true
-  - pattern: ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+  - pattern-either:
+    - pattern: ServerCertificateCustomValidationCallback = ($A, $B, $C, $D) => true
+    - pattern: ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+    - pattern: ServerCertificateValidationCallback = ($A, $B, $C, $D) => true
+    - pattern: RemoteCertificateValidationCallback = ($A, $B, $C, $D) => true
   metadata:
     rule_id: R-CRY-005
     severity: S1
     standards:
-      cwe:
-      - CWE-295
-      asvs:
-      - V12
+      cwe: ['CWE-295']
+      asvs: ['V12']
+
 - id: opengrep-tls-min-version
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CRY-006: Minimum TLS sürümü ≥ 1.2 olmalıdır; eski protokoller yasaktır.'
+  message: 'R-CRY-006: Minimum TLS sürümü ≥ 1.2 olmalıdır; eski protokoller (Ssl2/Ssl3/Tls/Tls11) yasaktır.'
   patterns:
-  - pattern: SecurityProtocol = SecurityProtocolType.Ssl3
-  - pattern: SecurityProtocol = SecurityProtocolType.Tls11
+  - pattern-either:
+    - pattern: $X.SecurityProtocol = SecurityProtocolType.Ssl3
+    - pattern: $X.SecurityProtocol = SecurityProtocolType.Tls
+    - pattern: $X.SecurityProtocol = SecurityProtocolType.Tls11
+    - pattern: SslProtocols = SslProtocols.Ssl3
+    - pattern: SslProtocols = SslProtocols.Tls
+    - pattern: SslProtocols = SslProtocols.Tls11
+    - pattern: $X.SslProtocols = SslProtocols.Tls11
   metadata:
     rule_id: R-CRY-006
     severity: S1
     standards:
-      cwe:
-      - CWE-326
-      asvs:
-      - V12
+      cwe: ['CWE-326']
+      asvs: ['V12']
+
 - id: opengrep-no-static-iv
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CRY-007: Kriptografik IV (Initialization Vector) sabit olamaz; her işlemde
-    rastgele üretilmelidir.'
+  message: 'R-CRY-007: Kriptografik IV (Initialization Vector) sabit olamaz; her işlemde RandomNumberGenerator ile üretilmelidir.'
   patterns:
-  - pattern: IV = new byte[] { ... }
-  - pattern: 'IV = '
+  - pattern-either:
+    - pattern: $X.IV = new byte[] { ... };
+    - pattern: IV = new byte[] { ... }
+    - pattern: $X.IV = Encoding.$ENC.GetBytes($S);
   metadata:
     rule_id: R-CRY-007
     severity: S1
     standards:
-      cwe:
-      - CWE-329
+      cwe: ['CWE-329']
+
 - id: opengrep-key-material-not-string
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-CRY-008: Kriptografik anahtarlar bellekte düz metin string olarak tutulamaz;
-    byte[] ve ZeroMemory kullanılmalıdır.'
+  message: 'R-CRY-008: Kriptografik anahtarlar bellekte düz metin string olarak tutulamaz; byte[] ve CryptographicOperations.ZeroMemory kullanılmalıdır.'
   patterns:
-  - pattern: string  = "secret-key-123456";
+  - pattern: string $NAME = $VAL;
+  - metavariable-regex:
+      metavariable: $NAME
+      regex: '(?i)^\w*(key|secret|password|pwd|token)\w*$'
+  - metavariable-regex:
+      metavariable: $VAL
+      regex: '^".{8,}"$'
   metadata:
     rule_id: R-CRY-008
     severity: S2
     standards:
-      cwe:
-      - CWE-316
+      cwe: ['CWE-316']
+
 - id: opengrep-no-http-plain-url
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CRY-009: Kaynak kodda http:// şemalı URL sabitleri yasaktır; daima https://
-    kullanılmalıdır.'
+  message: 'R-CRY-009: Kaynak kodda http:// şemalı URL sabitleri yasaktır; daima https:// kullanılmalıdır.'
   patterns:
-  - pattern-regex: '"http://(?!localhost|127\.0\.0\.1).*"'
+  - pattern-regex: '"http://(?!localhost|127\.0\.0\.1|0\.0\.0\.0|schemas\.|www\.w3\.org)[^"]*"'
   metadata:
     rule_id: R-CRY-009
     severity: S1
     standards:
-      cwe:
-      - CWE-319
-      asvs:
-      - V12
+      cwe: ['CWE-319']
+      asvs: ['V12']
+
+# ---------------------------------------------------------------------------
+# EF Core / veri erişimi
+# ---------------------------------------------------------------------------
 - id: opengrep-readonly-query-asnotracking
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
   message: 'R-NET-010: Salt okunur sorgularda .AsNoTracking() kullanımı zorunludur.'
   patterns:
-  - pattern: ..Where(...).ToList()
+  - pattern-either:
+    - pattern: $CTX.$SET.Where($P).ToListAsync($...A)
+    - pattern: $CTX.$SET.Where($P).ToList()
+  - pattern-not-regex: '\.AsNoTracking[ \t]*\('
   metadata:
     rule_id: R-NET-010
     severity: S2
     standards:
-      iso25010:
-      - Performance/ResourceUtilization
+      iso25010: ['Performance/ResourceUtilization']
+
 - id: opengrep-prefer-select-projection-over-include
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-011: Derin Include zincirleri yerine doğrudan DTO projeksiyonu (Select)
-    yapılmalıdır.'
+  message: 'R-NET-011: Derin Include zincirleri (3+) yerine doğrudan DTO projeksiyonu (Select) yapılmalıdır.'
   patterns:
-  - pattern: .Include( => .).Include( => .).Include( => .)
+  - pattern: $Q.Include($A).Include($B).Include($C)
   metadata:
     rule_id: R-NET-011
     severity: S2
     standards:
-      iso25010:
-      - Performance/ResourceUtilization
+      iso25010: ['Performance/ResourceUtilization']
+
 - id: opengrep-no-lazy-loading
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-012: Lazy loading kapalı olmalıdır; N+1 sorgu zincirlerini engellemek
-    için açık yükleme yapın.'
+  message: 'R-NET-012: Lazy loading kapalı olmalıdır; N+1 sorgu zincirlerini engellemek için açık yükleme yapın.'
   patterns:
-  - pattern: UseLazyLoadingProxies()
+  - pattern: $X.UseLazyLoadingProxies($...A)
   metadata:
     rule_id: R-NET-012
     severity: S1
     standards:
-      cwe:
-      - CWE-1050
+      cwe: ['CWE-1050']
+
 - id: opengrep-no-singleton-dbcontext
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-014: DbContext kesinlikle Singleton olarak kaydedilemez; Scoped
-    olmalıdır.'
+  message: 'R-NET-014: DbContext kesinlikle Singleton olarak kaydedilemez; Scoped olmalıdır.'
   patterns:
-  - pattern: services.AddSingleton<>()
+  - pattern-either:
+    - pattern: $S.AddSingleton<$T>($...A)
+    - pattern: $S.AddSingleton<$I, $T>($...A)
+  - metavariable-regex:
+      metavariable: $T
+      regex: '^\w*(DbContext|Context)$'
   metadata:
     rule_id: R-NET-014
     severity: S1
     standards:
-      cwe:
-      - CWE-543
+      cwe: ['CWE-543']
+
 - id: opengrep-entity-type-configuration-classes
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-015: Entity konfigürasyonları OnModelCreating içinde şişirilmemeli,
-    IEntityTypeConfiguration sınıflarına bölünmelidir.'
+  message: 'R-NET-015: Entity konfigürasyonları OnModelCreating içinde şişirilmemeli, IEntityTypeConfiguration sınıflarına bölünmelidir.'
   patterns:
-  - pattern: modelBuilder.Entity<>().ToTable(...)
+  - pattern-inside: 'protected override void OnModelCreating(...) { ... }'
+  - pattern: $MB.Entity<$T>().$M($...A)
   metadata:
     rule_id: R-NET-015
     severity: S2
     standards:
-      iso25010:
-      - Maintainability/Modularity
+      iso25010: ['Maintainability/Modularity']
+
 - id: opengrep-no-sync-savechanges
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-016: Asenkron metotlar içinde senkron SaveChanges() yasaktır; await
-    SaveChangesAsync(ct) kullanın.'
+  message: 'R-NET-016: Asenkron metotlar içinde senkron SaveChanges() yasaktır; await SaveChangesAsync(ct) kullanın.'
   patterns:
-  - pattern: async Task (...) { ... .SaveChanges(); ... }
+  - pattern-either:
+    - pattern-inside: async Task $M(...) { ... }
+    - pattern-inside: async Task<$R> $M(...) { ... }
+    - pattern-inside: async ValueTask $M(...) { ... }
+  - pattern: $CTX.SaveChanges()
   metadata:
     rule_id: R-NET-016
     severity: S2
     standards:
-      iso25010:
-      - Performance/ResourceUtilization
+      iso25010: ['Performance/ResourceUtilization']
+
 - id: opengrep-no-unpaged-tolist
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-017: Sayfalama (Skip/Take) yapılmadan sınırsız ToListAsync() çağrılması
-    yasaktır.'
+  message: 'R-NET-017: Sayfalama (Skip/Take) yapılmadan sınırsız ToListAsync() / ToArrayAsync() çağrılması yasaktır.'
   patterns:
-  - pattern: ..ToListAsync()
+  - pattern-either:
+    - pattern: $CTX.$SET.ToListAsync($...A)
+    - pattern: $CTX.$SET.Where($P).ToListAsync($...A)
+    - pattern: $CTX.$SET.ToArrayAsync($...A)
+  - pattern-not-regex: '\.(Take|Skip)[ \t]*\('
   metadata:
     rule_id: R-NET-017
     severity: S1
     standards:
-      cwe:
-      - CWE-770
-      owasp_api10:
-      - API10:2023
+      cwe: ['CWE-770']
+      owasp_api10: ['API10:2023']
+
 - id: opengrep-no-inmemory-db-in-integration-tests
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-020: Entegrasyon testlerinde InMemory veritabanı yerine Testcontainers
-    kullanılmalıdır.'
+  message: 'R-NET-020: Entegrasyon testlerinde InMemory veritabanı yerine Testcontainers kullanılmalıdır.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: options.UseInMemoryDatabase(...)
+  - pattern: $O.UseInMemoryDatabase($...A)
   metadata:
     rule_id: R-NET-020
     severity: S2
     standards:
-      iso25010:
-      - Reliability/Testability
-- id: opengrep-foreign-keys-and-indexes-explicit
-  languages:
-  - csharp
-  severity: WARNING
-  message: 'R-NET-021: SQL indeksleme ve yabancı anahtar kısıtları açıkça tanımlı
-    olmalıdır.'
-  patterns:
-  - pattern: 'class  : Migration { ... }'
-  metadata:
-    rule_id: R-NET-021
-    severity: S2
-    standards:
-      iso25010:
-      - Performance/ResourceUtilization
-- id: opengrep-optimistic-concurrency-handling
-  languages:
-  - csharp
-  severity: WARNING
-  message: 'R-NET-024: Eşzamanlı güncellenen entitylerde [Timestamp] veya IsConcurrencyToken
-    kontrolü yapılmalıdır.'
-  patterns:
-  - pattern: '[Timestamp]'
-  metadata:
-    rule_id: R-NET-024
-    severity: S2
-    standards:
-      cwe:
-      - CWE-362
+      iso25010: ['Reliability/Testability']
+
 - id: opengrep-prefer-batch-operations
-  languages:
-  - csharp
+  languages: [csharp]
   severity: INFO
-  message: 'R-NET-025: Döngü içinde tek tek Add yerine AddRange veya ExecuteUpdateAsync
-    tercih edilmelidir.'
+  message: 'R-NET-025: Döngü içinde tek tek Add yerine AddRange veya ExecuteUpdateAsync tercih edilmelidir.'
   patterns:
-  - pattern: foreach ( in ) { .Add(); }
+  - pattern-either:
+    - pattern: foreach ($T $X in $C) { $L.Add($Y); }
+    - pattern: foreach (var $X in $C) { $L.Add($Y); }
   metadata:
     rule_id: R-NET-025
     severity: S3
     standards:
-      iso25010:
-      - Performance/ResourceUtilization
+      iso25010: ['Performance/ResourceUtilization']
+
+# ---------------------------------------------------------------------------
+# HTTP / dayanıklılık
+# ---------------------------------------------------------------------------
 - id: opengrep-no-new-httpclient
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-022: new HttpClient() soket tüketimine yol açar; IHttpClientFactory
-    kullanın.'
+  message: 'R-NET-022: new HttpClient() soket tüketimine yol açar; IHttpClientFactory kullanın.'
   patterns:
-  - pattern: new HttpClient()
   - pattern: new HttpClient($...ARGS)
   metadata:
     rule_id: R-NET-022
     severity: S1
     standards:
-      cwe:
-      - CWE-404
-- id: opengrep-propagate-correlation-id
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-NET-040: Dış servis çağrılarında X-Correlation-Id başlığı taşınmalıdır.'
-  patterns:
-  - pattern: .DefaultRequestHeaders.Add("X-Correlation-Id", ...)
-  metadata:
-    rule_id: R-NET-040
-    severity: S1
-    standards:
-      aspice:
-      - SWE.1-6
-      iso25010:
-      - Maintainability/Analysability
-- id: opengrep-message-handler-idempotency
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-NET-041: Mesaj ve webhook işleyicilerinde idempotency anahtarı kontrolü
-    zorunludur.'
-  patterns:
-  - pattern: interface IIdempotentMessage { ... }
-  metadata:
-    rule_id: R-NET-041
-    severity: S1
-    standards:
-      iso25010:
-      - Reliability/FaultTolerance
-- id: opengrep-require-retry-policy
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-NET-042: Dış çağrılarda Polly retry politikası bulunması zorunludur.'
-  patterns:
-  - pattern: HttpPolicyExtensions.HandleTransientHttpError().RetryAsync(...)
-  metadata:
-    rule_id: R-NET-042
-    severity: S1
-    standards:
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-404']
+
 - id: opengrep-httpclient-timeout-configured
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-NET-045: Timeout yapılandırması olmayan HttpClient çağrısı yasaktır.'
+  message: 'R-NET-045: HttpClient üzerinde sonsuz timeout tanımlanamaz; sınırlı bir Timeout zorunludur.'
   patterns:
-  - pattern: new HttpClient { Timeout = Timeout.InfiniteTimeSpan }
+  - pattern-either:
+    - pattern: $C.Timeout = Timeout.InfiniteTimeSpan;
+    - pattern: Timeout = Timeout.InfiniteTimeSpan
+    - pattern: $C.Timeout = TimeSpan.FromMilliseconds(-1);
   metadata:
     rule_id: R-NET-045
     severity: S1
     standards:
-      cwe:
-      - CWE-400
-- id: opengrep-retry-only-idempotent-calls
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-NET-047: Retry politikası yalnızca idempotent operasyonlarda işletilebilir.'
-  patterns:
-  - pattern: Policy.Handle<...>().RetryAsync(...) /* POST non-idempotent */
-  metadata:
-    rule_id: R-NET-047
-    severity: S1
-    standards:
-      iso25010:
-      - Reliability/FaultTolerance
+      cwe: ['CWE-400']
+
 - id: opengrep-backoff-with-jitter
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-048: Retry bekleme sürelerinde üstel geri çekilme ve rastgele gecikme
-    (jitter) zorunludur.'
+  message: 'R-NET-048: Retry bekleme sürelerinde üstel geri çekilme ve rastgele gecikme (jitter) zorunludur; sabit veya beklemesiz retry yasaktır.'
   patterns:
-  - pattern: Backoff.DecorrelatedJitterBackoffV2(...)
+  - pattern-either:
+    - pattern: $P.RetryAsync($...A)
+    - pattern: $P.Retry($...A)
+    - pattern: $P.WaitAndRetryAsync($N, $I => TimeSpan.FromSeconds($C))
+    - pattern: $P.WaitAndRetryAsync($N, $I => TimeSpan.FromMilliseconds($C))
   metadata:
     rule_id: R-NET-048
     severity: S2
     standards:
-      iso25010:
-      - Reliability/FaultTolerance
-- id: opengrep-poison-message-handling
-  languages:
-  - csharp
-  severity: WARNING
-  message: 'R-NET-057: Zehirli mesaj (poison message) döngülerini önlemek için yeniden
-    deneme üst sınırı tanımlanmalıdır.'
-  patterns:
-  - pattern: 'MaxDeliveryCount = '
-  metadata:
-    rule_id: R-NET-057
-    severity: S2
-    standards:
-      iso25010:
-      - Reliability/FaultTolerance
-- id: opengrep-webhook-signature-verification
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-NET-058: Webhook endpointlerinde HMAC imza doğrulaması zorunludur.'
-  patterns:
-  - pattern: HMACSHA256.HashData(...)
-  metadata:
-    rule_id: R-NET-058
-    severity: S1
-    standards:
-      cwe:
-      - CWE-345
-      asvs:
-      - V4
-- id: opengrep-activity-source-on-external-calls
-  languages:
-  - csharp
-  severity: WARNING
-  message: 'R-OBS-001: Her harici entegrasyon bir OpenTelemetry Activity/span açmalıdır.'
-  patterns:
-  - pattern: ActivitySource.StartActivity(...)
-  metadata:
-    rule_id: R-OBS-001
-    severity: S2
-    standards:
-      iso25010:
-      - Maintainability/Analysability
-- id: opengrep-traceparent-propagation
-  languages:
-  - csharp
-  severity: ERROR
-  message: 'R-OBS-002: Dağıtık izleme için W3C traceparent başlığı giden tüm isteklere
-    enjekte edilmelidir.'
-  patterns:
-  - pattern: Activity.Current?.Id
-  metadata:
-    rule_id: R-OBS-002
-    severity: S1
-    standards:
-      iso25010:
-      - Maintainability/Analysability
+      iso25010: ['Reliability/FaultTolerance']
+
+# ---------------------------------------------------------------------------
+# Gözlemlenebilirlik
+# ---------------------------------------------------------------------------
 - id: opengrep-metric-names-convention
-  languages:
-  - csharp
+  languages: [csharp]
   severity: INFO
-  message: 'R-OBS-004: Metrik adları company.service.metric_name konvansiyonuna uymalıdır.'
+  message: 'R-OBS-004: Metrik adları company.service.metric_name konvansiyonuna (en az 3 nokta ayrımlı küçük harf segment) uymalıdır.'
   patterns:
-  - pattern: Meter.CreateCounter<>()
+  - pattern-either:
+    - pattern: $M.CreateCounter<$T>($NAME, $...A)
+    - pattern: $M.CreateHistogram<$T>($NAME, $...A)
+  - metavariable-regex:
+      metavariable: $NAME
+      regex: '^"(?![a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){2,}")'
   metadata:
     rule_id: R-OBS-004
     severity: S3
     standards:
-      iso25010:
-      - Maintainability/Analysability
+      iso25010: ['Maintainability/Analysability']
+
 - id: opengrep-no-high-cardinality-metric-tags
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-OBS-006: Metrik taglerinde kardinalite patlamasına yol açacak tekil
-    IDler etiket olarak verilemez.'
+  message: 'R-OBS-006: Metrik taglerinde kardinalite patlamasına yol açacak tekil ID''ler etiket olarak verilemez.'
   patterns:
-  - pattern: new KeyValuePair<string, object>("user_id", )
+  - pattern-either:
+    - pattern: new KeyValuePair<string, object>($K, $V)
+    - pattern: new KeyValuePair<string, object?>($K, $V)
+  - metavariable-regex:
+      metavariable: $K
+      regex: '(?i)^"(\w*_)?(user_?id|customer_?id|order_?id|correlation_?id|trace_?id|email|tckn)"$'
   metadata:
     rule_id: R-OBS-006
     severity: S2
     standards:
-      iso25010:
-      - Performance/ResourceUtilization
+      iso25010: ['Performance/ResourceUtilization']
+
+# ---------------------------------------------------------------------------
+# Konfigürasyon ve ortam
+# ---------------------------------------------------------------------------
 - id: opengrep-strongly-typed-options
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-023: Konfigürasyon serbest metinle okunamaz; IOptions<T> deseni
-    kullanılmalıdır.'
+  message: 'R-NET-023: Konfigürasyon serbest metin indeksleyiciyle okunamaz; IOptions<T> deseni kullanılmalıdır.'
   patterns:
-  - pattern: Configuration[""]
+  - pattern-either:
+    - pattern: $C.Configuration[$K]
+    - pattern: Configuration[$K]
+    - pattern: $C.GetSection($K).Value
+  - metavariable-regex:
+      metavariable: $K
+      regex: '^"'
   metadata:
     rule_id: R-NET-023
     severity: S2
     standards:
-      iso25010:
-      - Maintainability/Modifiability
+      iso25010: ['Maintainability/Modifiability']
+
 - id: opengrep-no-developerexceptionpage-in-prod
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CFG-002: app.UseDeveloperExceptionPage() üretim ortamında kesinlikle
-    etkinleştirilemez.'
+  message: 'R-CFG-002: app.UseDeveloperExceptionPage() yalnızca IsDevelopment() koşulu altında etkinleştirilebilir.'
   patterns:
-  - pattern: app.UseDeveloperExceptionPage();
+  - pattern: $APP.UseDeveloperExceptionPage($...A)
+  - pattern-not-inside: 'if ($E.IsDevelopment()) { ... }'
+  - pattern-not-inside: 'if ($E.IsDevelopment()) ...'
   metadata:
     rule_id: R-CFG-002
     severity: S1
     standards:
-      cwe:
-      - CWE-489
-      asvs:
-      - V13
+      cwe: ['CWE-489']
+      asvs: ['V13']
+
 - id: opengrep-cors-no-wildcard-with-credentials
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CFG-003: CORS yapılandırmasında AllowAnyOrigin ile AllowCredentials
-    kombinasyonu yasaktır.'
+  message: 'R-CFG-003: CORS yapılandırmasında AllowAnyOrigin / SetIsOriginAllowed(_ => true) ile AllowCredentials kombinasyonu yasaktır.'
   patterns:
-  - pattern: .AllowAnyOrigin().AllowCredentials()
-  - pattern: .SetIsOriginAllowed( => true).AllowCredentials()
+  - pattern-either:
+    - pattern: $B.AllowAnyOrigin().AllowCredentials()
+    - pattern: $B.AllowCredentials().AllowAnyOrigin()
+    - pattern: $B.SetIsOriginAllowed($X => true).AllowCredentials()
+    - pattern: $B.AllowCredentials().SetIsOriginAllowed($X => true)
   metadata:
     rule_id: R-CFG-003
     severity: S1
     standards:
-      cwe:
-      - CWE-942
-      asvs:
-      - V3
-- id: opengrep-security-headers-configured
-  languages:
-  - csharp
-  severity: WARNING
-  message: 'R-CFG-004: HTTP yanıtlarında güvenlik başlıkları (HSTS, CSP, nosniff)
-    zorunludur.'
-  patterns:
-  - pattern: app.UseHsts();
-  metadata:
-    rule_id: R-CFG-004
-    severity: S2
-    standards:
-      asvs:
-      - V3
-      - V12
+      cwe: ['CWE-942']
+      asvs: ['V3']
+
 - id: opengrep-no-detailed-errors-in-prod
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-CFG-005: Üretimde detaylı hata sayfası kapalı olmalı, RFC 7807 ProblemDetails
-    dönülmelidir.'
+  message: 'R-CFG-005: Üretimde detaylı hata dökümü kapalı olmalı, RFC 7807 ProblemDetails dönülmelidir.'
   patterns:
-  - pattern: IncludeExceptionDetailInFaults = true
+  - pattern-either:
+    - pattern: IncludeExceptionDetailInFaults = true
+    - pattern: $X.EnableDetailedErrors()
+    - pattern: $X.EnableSensitiveDataLogging()
   metadata:
     rule_id: R-CFG-005
     severity: S1
     standards:
-      cwe:
-      - CWE-209
+      cwe: ['CWE-209']
+
 - id: opengrep-no-debug-directives-in-business-logic
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-CFG-006: Feature flagler merkezi yönetilmelidir; #if DEBUG iş mantığı
-    barındıramaz.'
+  message: 'R-CFG-006: Feature flagler merkezi yönetilmelidir; #if DEBUG iş mantığı barındıramaz.'
+  paths:
+    exclude: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: '#if DEBUG'
+  - pattern-regex: '(?m)^[ \t]*#if[ \t]+DEBUG'
   metadata:
     rule_id: R-CFG-006
     severity: S2
     standards:
-      iso25010:
-      - Flexibility/Replaceability
+      iso25010: ['Flexibility/Replaceability']
+
 - id: opengrep-env-var-names-from-constants
-  languages:
-  - csharp
+  languages: [csharp]
   severity: INFO
-  message: 'R-CFG-007: Ortam değişkeni adları serbest string olamaz; sabit sınıflardan
-    okunmalıdır.'
+  message: 'R-CFG-007: Ortam değişkeni adları serbest string olamaz; sabit sınıflardan okunmalıdır.'
   patterns:
-  - pattern: Environment.GetEnvironmentVariable("")
+  - pattern: Environment.GetEnvironmentVariable($N, $...A)
+  - metavariable-regex:
+      metavariable: $N
+      regex: '^"'
   metadata:
     rule_id: R-CFG-007
     severity: S3
     standards:
-      iso25010:
-      - Maintainability/Modifiability
+      iso25010: ['Maintainability/Modifiability']
+
 - id: opengrep-no-guid-newguid-in-domain
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-052: Domain içinde doğrudan Guid.NewGuid() çağrısı yapılamaz; parametre
-    verilmeli veya enjekte edilmelidir.'
+  message: 'R-NET-052: Domain içinde doğrudan Guid.NewGuid() çağrısı yapılamaz; kimlik dışarıdan verilmeli veya üretici enjekte edilmelidir.'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
   patterns:
   - pattern: Guid.NewGuid()
-    pattern-inside: namespace $...Domain { ... }
   metadata:
     rule_id: R-NET-052
     severity: S2
     standards:
-      iso25010:
-      - Maintainability/Testability
+      iso25010: ['Maintainability/Testability']
+
 - id: opengrep-prefer-datetimeoffset
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-NET-059: Zaman dilimi belirsizliğini önlemek için DateTime yerine DateTimeOffset
-    kullanılmalıdır.'
+  message: 'R-NET-059: Dışa açık sözleşmelerde zaman dilimi belirsizliğini önlemek için DateTime yerine DateTimeOffset kullanılmalıdır.'
   patterns:
-  - pattern: DateTime  = $...ARGS;
+  - pattern-regex: '(?m)^[ \t]*public[ \t]+DateTime\??[ \t]+\w+[ \t]*\{[ \t]*get;'
   metadata:
     rule_id: R-NET-059
     severity: S2
     standards:
-      cwe:
-      - CWE-1339
+      cwe: ['CWE-1339']
+
+# ---------------------------------------------------------------------------
+# Test disiplini
+# ---------------------------------------------------------------------------
 - id: opengrep-test-must-contain-assertion
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-TDD-003: Assertion içermeyen boş testler yasaktır; her test en az 1
-    iddia doğrulamalıdır.'
+  message: 'R-TDD-003: Assertion içermeyen testler yasaktır; her test en az 1 iddia doğrulamalıdır.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: '[Fact] public void () { }'
+  - pattern-either:
+    - pattern: '[Fact] public void $M() { ... }'
+    - pattern: '[Fact] public async Task $M() { ... }'
+    - pattern: '[Theory] public void $M(...) { ... }'
+    - pattern: '[Theory] public async Task $M(...) { ... }'
+  - pattern-not-regex: '(Assert\.|\.Should\(|Verify\(|Received\()'
   metadata:
     rule_id: R-TDD-003
     severity: S1
     standards:
-      iso25010:
-      - Maintainability/Testability
+      iso25010: ['Maintainability/Testability']
+
 - id: opengrep-fact-skip-must-have-reason
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-TDD-004: Testlerde Fact(Skip = "") gerekçesiz olamaz; issue referansı
-    zorunludur.'
+  message: 'R-TDD-004: Testlerde Fact(Skip = "...") gerekçesiz olamaz; issue referansı zorunludur.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: '[Fact(Skip = "")]'
+  - pattern-regex: '\[(Fact|Theory)\([^)]*Skip[ \t]*=[ \t]*"[ \t]*"'
   metadata:
     rule_id: R-TDD-004
     severity: S2
     standards:
-      aspice:
-      - SWE.1-6
+      aspice: ['SWE.1-6']
+
 - id: opengrep-no-thread-sleep-in-tests
-  languages:
-  - csharp
+  languages: [csharp]
   severity: ERROR
-  message: 'R-TST-003: Testlerde Thread.Sleep kullanımı kesinlikle yasaktır; Task.Delay
-    kullanın.'
+  message: 'R-TST-003: Testlerde Thread.Sleep kullanımı kesinlikle yasaktır; Task.Delay veya TaskCompletionSource kullanın.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
   - pattern: Thread.Sleep($...ARGS);
   metadata:
     rule_id: R-TST-003
     severity: S1
     standards:
-      iso25010:
-      - Maintainability/Testability
+      iso25010: ['Maintainability/Testability']
+
 - id: opengrep-test-naming-convention
-  languages:
-  - csharp
+  languages: [csharp]
   severity: INFO
-  message: 'R-TST-004: Test metot adları Metot_Senaryo_BeklenenSonuç konvansiyonuna
-    uymalıdır.'
+  message: 'R-TST-004: Test metot adları Metot_Senaryo_BeklenenSonuç konvansiyonuna uymalıdır.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: '[Fact] public void Test1() { ... }'
+  - pattern-either:
+    - pattern: '[Fact] public void $M() { ... }'
+    - pattern: '[Fact] public async Task $M() { ... }'
+  - metavariable-regex:
+      metavariable: $M
+      regex: '^(?!\w+_\w+_\w+$)'
   metadata:
     rule_id: R-TST-004
     severity: S3
     standards:
-      iso25010:
-      - Maintainability/Analysability
+      iso25010: ['Maintainability/Analysability']
+
 - id: opengrep-tests-order-independent
-  languages:
-  - csharp
+  languages: [csharp]
   severity: WARNING
-  message: 'R-TST-005: Testler birbirine statik durumla bağımlı olamaz; sıra bağımsız
-    olmalıdır.'
+  message: 'R-TST-005: Testler birbirine değiştirilebilir statik durumla bağımlı olamaz; sıra bağımsız olmalıdır.'
+  paths:
+    include: ['**/*Tests/**', '**/*Test/**', '**/tests/**']
   patterns:
-  - pattern: static int ;
+  - pattern-either:
+    - pattern: private static $T $F = $V;
+    - pattern: private static $T $F;
+    - pattern: static $T $F = $V;
+  - pattern-not-regex: '\b(readonly|const)\b'
   metadata:
     rule_id: R-TST-005
     severity: S2
     standards:
-      iso25010:
-      - Reliability/Integrity
+      iso25010: ['Reliability/Integrity']
+
+# ---------------------------------------------------------------------------
+# Tedarik zinciri (CI iş akışları — YAML)
+# ---------------------------------------------------------------------------
 - id: opengrep-ci-action-pinned-by-sha
-  languages:
-  - csharp
+  languages: [yaml]
   severity: ERROR
-  message: 'R-SUP-006: CI GitHub Actions sürümleri tag ile değil SHA-1 commit hash
-    ile pinlenmelidir.'
+  message: 'R-SUP-006: CI GitHub Actions sürümleri tag ile değil 40 karakterlik SHA-1 commit hash ile pinlenmelidir.'
+  paths:
+    include: ['**/.github/workflows/*.yml', '**/.github/workflows/*.yaml']
   patterns:
-  - pattern: 'uses: actions/@v'
+  - pattern-regex: '(?m)^[ \t-]*uses:[ \t]*["'']?[\w.-]+/[\w./-]+@(?![0-9a-f]{40}\b)\S+'
   metadata:
     rule_id: R-SUP-006
     severity: S1
     standards:
-      slsa:
-      - L3
-      cwe:
-      - CWE-829
+      slsa: ['L3']
+      cwe: ['CWE-829']
+
 - id: opengrep-ci-secrets-and-pr-target
-  languages:
-  - csharp
+  languages: [yaml]
   severity: ERROR
-  message: 'R-SUP-007: Çatallanmış PRlarda kod çalıştırma zafiyetini önlemek için
-    pull_request_target yerine pull_request kullanılmalıdır.'
+  message: 'R-SUP-007: Çatallanmış PR''larda kod çalıştırma zafiyetini önlemek için pull_request_target yerine pull_request kullanılmalıdır.'
+  paths:
+    include: ['**/.github/workflows/*.yml', '**/.github/workflows/*.yaml']
   patterns:
-  - pattern: 'on: pull_request_target'
+  - pattern-regex: '(?m)^[ \t-]*(pull_request_target[ \t]*:|.*\bpull_request_target\b)'
   metadata:
     rule_id: R-SUP-007
     severity: S1
     standards:
-      cwe:
-      - CWE-269
+      cwe: ['CWE-269']
+
+# ---------------------------------------------------------------------------
+# Domain saflığı — ortam ve web bağlamı erişimi
+# ---------------------------------------------------------------------------
+- id: opengrep-no-environment-access-in-domain
+  languages: [csharp]
+  severity: ERROR
+  message: 'R-NET-053: Domain katmanı ortam değişkenlerine erişemez; yapılandırma dışarıdan enjekte edilmelidir.'
+  paths:
+    include: ['**/Domain/**', '**/*.Domain/**']
+  patterns:
+  - pattern-either:
+    - pattern: Environment.GetEnvironmentVariable($...A)
+    - pattern: Environment.GetEnvironmentVariables($...A)
+    - pattern: Environment.MachineName
+    - pattern: Environment.CurrentDirectory
+  metadata:
+    rule_id: R-NET-053
+    severity: S1
+    category: architecture
+    standards:
+      iso25010: ['Maintainability/Testability']

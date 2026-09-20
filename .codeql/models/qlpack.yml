@@ -1,5 +1,7 @@
 name: company-security/csharp-flow-models
 version: 2.0.0
+library: true
+description: UDAP .NET v2 özel C# veri akışı ve taint modelleri (CodeQL data extensions).
 dependencies:
   codeql/csharp-all: "*"
 dataExtensions:

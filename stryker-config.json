@@ -5,12 +5,14 @@
       "src/*/Domain/**",
       "src/*/Application/**",
       "!**/*.Generated.cs",
+      "!**/*.g.cs",
       "!**/Migrations/**",
       "!**/Dtos/**"
     ],
     "solution": "agent-squad.sln",
     "test-projects": [
-      "tests/**/*.Tests.csproj"
+      "tests/**/*.Tests.csproj",
+      "tests/**/*.UnitTests.csproj"
     ],
     "reporters": [
       "progress",
@@ -19,9 +21,9 @@
       "json"
     ],
     "thresholds": {
-      "high": 80,
-      "low": 60,
-      "break": 60
+      "high": 100,
+      "low": 100,
+      "break": 100
     },
     "since": {
       "enabled": true,
@@ -34,8 +36,6 @@
       ]
     },
     "mutation-level": "Standard",
-    "concurrency": 4,
-    "max-survived-mutants": 0,
-    "comment": "R-TST-001: Değişen dosyalarda hayatta kalan mutant sayısı 0 olmalıdır. Hedef projeye entegre edilirken 'solution' alanı projenin .sln adıyla güncellenmelidir."
+    "concurrency": 4
   }
 }

@@ -1,12 +1,10 @@
 {
+  "//": "Agent Squad v2 — MCP sunucu şablonu. Opengrep/CodeQL/Stryker birer CLI aracıdır, MCP sunucusu DEĞİLDİR; bunlar .agents/verify.sh ve init.sh üzerinden doğrudan çalıştırılır. Buraya yalnızca gerçek MCP sunucuları eklenmelidir.",
   "mcpServers": {
-    "opengrep": {
-      "command": "opengrep",
-      "args": [
-        "scan",
-        "--config",
-        ".opengrep/rules.yaml"
-      ]
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "//": "Ajanın kural kataloğu ve motor konfigürasyonlarını okuyabilmesi için."
     }
   }
 }

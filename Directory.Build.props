@@ -1,18 +1,74 @@
 <Project>
+
+  <!--
+    Agent Squad v2 — merkezi derleme ve analiz kapıları.
+    Her özellik .agents/rules_registry.yaml içindeki bir kurala bağlıdır
+    (owner: msbuild, enforced_by: msbuild.<ÖzellikAdı>); eşleşme `bash .agents/verify.sh`
+    tarafından doğrulanır.
+  -->
+
   <PropertyGroup>
+    <!-- Hedef çerçeve: tek noktadan yönetilir, projeler bunu miras alır.
+         Farklı bir sürüm gerekiyorsa derlemede -p:SquadTargetFramework=net8.0 ile geçersiz kılın. -->
+    <SquadTargetFramework Condition="'$(SquadTargetFramework)' == ''">net10.0</SquadTargetFramework>
+
     <!-- R-NET-062: Sabit Analiz Sürümü (Tekrarlanabilirlik) -->
-    <AnalysisLevel>9.0-recommended</AnalysisLevel>
+    <AnalysisLevel>10.0-recommended</AnalysisLevel>
     <AnalysisMode>Recommended</AnalysisMode>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
     <!-- R-NET-064: Nullable Reference Types -->
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+
     <!-- R-NET-063: Sıfır Uyarı Toleransı (CI ve Geliştirme) -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      Şiddet modelinin korunması (01-squad-handoff-protocol.md):
+        S1 = build kırar   -> .editorconfig içinde severity = error
+        S2 = PR bloklar    -> severity = warning, build KIRILMAZ, PR kapısında değerlendirilir
+        S3 = uyarı         -> severity = suggestion
+      TreatWarningsAsErrors tek başına S2/S3'ü de build kıran hataya çevirir ve üç kademeli
+      modeli çökertir. Aşağıdaki liste S2/S3 tanılarını uyarı seviyesinde tutar.
+    -->
+    <WarningsNotAsErrors>
+      $(WarningsNotAsErrors);
+      S1541;S3776;S134;S107;S110;S138;S104;S3260;
+      CA2007;CA1304;
+      VSTHRD200
+    </WarningsNotAsErrors>
+
+    <!-- R-NET-061: Deterministik restore; kilit dosyası zorunlu -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- CI'da kilit dosyasından sapma restore'u kırar (SLSA L2/L3 build bütünlüğü) -->
+    <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreLockedMode>
+
+    <!-- R-NET-065: Zafiyetli NuGet paketleri build'i kırar -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
+    <WarningsAsErrors>$(WarningsAsErrors);NU1900;NU1901;NU1902;NU1903;NU1904</WarningsAsErrors>
+
+    <!-- R-SUP-002: Yeniden üretilebilir (deterministic) build çıktısı -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <!--
+    R-NET-060: Merkezi paket sürüm yönetimi (Central Package Management).
+    Directory.Packages.props mevcutsa etkinleşir; böylece bu dosya CPM kullanmayan
+    projelerde de sorunsuz çalışır.
+  -->
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory)Directory.Packages.props')">
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- SonarAnalyzer.CSharp: Clean Code & Kod Kokuları (R-SOLID-008, R-SOLID-009) -->
+    <!-- SonarAnalyzer.CSharp: Clean Code & Kod Kokuları (R-SOLID-005..012) -->
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.7.0.110445">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -40,4 +96,5 @@
   <ItemGroup Condition="Exists('$(MSBuildThisFileDirectory)BannedSymbols.txt')">
     <AdditionalFiles Include="$(MSBuildThisFileDirectory)BannedSymbols.txt" />
   </ItemGroup>
+
 </Project>

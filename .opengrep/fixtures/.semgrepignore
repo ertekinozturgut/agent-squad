@@ -1,0 +1,25 @@
+# ==============================================================================
+# Agent Squad v2 — Opengrep / Semgrep tarama kapsamı
+#
+# ÖNEMLİ: Bu dosya varsayılan semgrep ignore listesinin YERİNE geçer.
+# Varsayılan liste `tests/` dizinini hariç tutar; UDAP kural kataloğundaki
+# test disiplini kuralları (R-TDD-003/004, R-TST-003/004/005, R-PII-009,
+# R-NET-020) test kodunda çalışmak zorunda olduğu için burada test dizinleri
+# BİLEREK hariç tutulmaz.
+# ==============================================================================
+
+# Derleme çıktıları ve paket önbellekleri
+bin/
+obj/
+packages/
+node_modules/
+TestResults/
+*.min.js
+
+# Üretilmiş kod
+**/Migrations/
+*.Designer.cs
+*.generated.cs
+*.g.cs
+
+# Kural öz-testi fixture'ları (kasıtlı ihlal içerir; .agents/verify.sh tarar)

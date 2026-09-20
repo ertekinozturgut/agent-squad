@@ -1,6 +1,31 @@
-- description: Full C# Senior Quality, SonarQube and Design Patterns Suite
+# ==============================================================================
+# UDAP .NET v2 — C# analiz süiti
+#
+# İki kaynaktan beslenir:
+#   1. Bu paketteki 35 özel sorgu (tasarım kalıpları, SonarQube temiz kod, senior mühendislik).
+#   2. codeql/csharp-queries paketindeki standart güvenlik sorguları; kural kataloğundaki
+#      R-INJ-*, R-SEC-008 ve R-NET-084 bu sorgulara bağlıdır (bkz. .agents/rules_registry.yaml).
+#
+# Süitteki her sorgu kataloğa bağlı olmalıdır; `bash .agents/verify.sh` bunu doğrular.
+# ==============================================================================
+- description: UDAP .NET v2 — Senior Quality, SonarQube, Design Patterns ve güvenlik süiti
+
+# 1) Bu paketin tüm özel sorguları
 - queries: .
   from: company-security/csharp-quality-queries
+
+# 2) Katalogda atıf yapılan standart CodeQL güvenlik sorguları
+- queries: .
+  from: codeql/csharp-queries
+- include:
+    id:
+      - cs/sql-injection                              # R-INJ-001
+      - cs/command-line-injection                     # R-INJ-002
+      - cs/path-injection                             # R-INJ-003
+      - cs/request-forgery                            # R-INJ-004
+      - cs/ldap-injection                             # R-INJ-007
+      - cs/log-forging                                # R-NET-084
+      - cs/information-exposure-through-exception     # R-SEC-008
 - include:
     tags:
       - design-patterns

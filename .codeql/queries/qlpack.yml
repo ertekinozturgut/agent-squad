@@ -1,6 +1,8 @@
 name: company-security/csharp-quality-queries
 version: 1.0.0
-description: Senior CodeQL rules covering SonarQube quality, Design Patterns, and Senior Engineering practices (UDAP .NET v2).
+description: UDAP .NET v2 özel CodeQL sorguları (SonarQube temiz kod, GoF tasarım kalıpları, senior mühendislik).
 dependencies:
   codeql/csharp-all: "*"
+  codeql/csharp-queries: "*"
+  company-security/csharp-flow-models: "*"
 suites: codeql-suites
