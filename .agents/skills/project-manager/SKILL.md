@@ -128,30 +128,34 @@ Her görev aşağıdaki standart JSON formatında (`tasks.schema.json` doğrulam
 
 ---
 
-## 📋 5. Adım Adım PM Orkestrasyon Protokolü (SOP)
+## 📋 5. Deterministik SDLC Runner ile Adım Adım PM Orkestrasyonu
 
-```text
-[Adım 1: Backlog Önceliklendirme]
-  ├── 'tasks.json' dosyasını oku.
-  └── Bağımlılıkları tamamlanmış en yüksek öncelikli 'pending' görevi belirle.
+Squad orkestratörü olarak PM, mekanik süreçleri deterministik CLI runner (`node .agents/runner/squad-runner.mjs`) aracılığıyla yönetir:
 
-[Adım 2: DoR Denetimini İşlet]
-  ├── Analist, Mimar (Tasarım Kalıpları dahil) ve UX şartnamelerini teyit et.
-  └── Hepsi tamsa görevi 'in_progress' durumuna al (WIP = 1).
+```bash
+# 1. Genel Durumu ve Sıradaki Görevi İncele
+node .agents/runner/squad-runner.mjs status
 
-[Adım 3: Geliştirme Akışını Koordine Et]
-  ├── Backend geliştiricisini servis katmanı, controller ve tasarım kalıpları için devreye sok.
-  ├── Razor uzmanını UI/UX şartnamesine göre .cshtml kodlaması için yönlendir.
-  └── Geliştirme bittiğinde durumu 'in_review' yap.
+# 2. Sıradaki Göreve Geç (Otomatik: feature/{taskId} branch açar, .agents/tasks/{taskId}/ oluşturur)
+node .agents/runner/squad-runner.mjs next
 
-[Adım 4: Kalite ve Güvenlik Kapısını Tetikle]
-  ├── QA uzmanından xUnit ve son kullanıcı test raporunu al.
-  ├── Security Reviewer'dan OWASP, SonarAnalyzer ve kod kalitesi imzasını al.
-  └── Herhangi bir red varsa görevi 'changes_requested' yap, rejectionCount'u artır ve geliştiriciye ilet.
+# 3. Kademeli Kalite Kapılarını Koştur
+# Kademe 1: Derleme & Hızlı Birim Testler (<30s)
+node .agents/runner/squad-runner.mjs verify --tier 1
 
-[Adım 5: Görevi Kapat ve Sıradakini Başlat]
-  ├── DoD maddeleri tamsa görevi 'completed' yap.
-  └── Sıradaki 'pending' görevi kuyruktan çekerek döngüyü yeniden başlat.
+# Kademe 2: Katman Sınırları & Opengrep SAST (1-2dk)
+node .agents/runner/squad-runner.mjs verify --tier 2
+
+# Kademe 3: Değişen Dosyalarda Scoped Stryker (%100 Mutant) & CodeQL
+node .agents/runner/squad-runner.mjs verify --tier 3
+
+# 4. İhlal/Ret Durumunda Devre Kesici Kontrolü (Max 3 İterasyon)
+node .agents/runner/squad-runner.mjs reject --reason "Stryker mutant hayatta kaldı: LoanCalculator.cs:L42"
+# Not: 3. rette otomatik BLOCKED olur ve rca-report.md üretilerek kullanıcıya eskalasyon yapılır.
+
+# 5. DoD Sağlandığında Görevi Kapat ve Temiz Merge Et
+node .agents/runner/squad-runner.mjs complete
+# (Otomatik: main'e merge eder, feature branch'i siler, tasks.json'ı completed yapar)
 ```
 
 ---

@@ -41,6 +41,9 @@ Ajan, `.agents/init.sh` scriptini çalıştırarak veya doğrudan şu dosyaları
 - **`.codeql/models/`**: CodeQL veri akışı ve taint modelleri.
 - **`tests/ArchitectureTests/`**: Hedef namespace'e uyarlanmış bağımsız ArchUnitNET C# test projesi ve fixture sınıfları.
 - **`tasks.json`**: `tasks.template.json` şablonundan türetilmiş aktif görev kuyruğu.
+- **`.agents/squad.config.json`**: Çoklu teknoloji adaptörü ve 3 kademeli kalite kapı komutları.
+- **`.agents/runner/squad-runner.mjs`**: Otonom SDLC görev ve git dalı yöneticisi.
+- **`.agents/tasks/{taskId}/`**: Görev başına izole şartname ve analiz alanı ($O(1)$ token).
 - **`docs/`**: 11 standarda bağlı izlenebilirlik matrisi ve SBOM politikası.
 
 ### Adım 3: Çözüme Bağlama ve Test Doğrulama

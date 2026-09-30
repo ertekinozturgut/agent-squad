@@ -26,7 +26,7 @@ NAMESPACE="${1:-$DEFAULT_NS}"
 echo "🎯 Çözüm Adı: $SLN_NAME"
 echo "🎯 Namespace Prefix: $NAMESPACE"
 
-# 2. tasks.json Kurulumu
+# 2. tasks.json ve squad.config.json Kurulumu
 if [ ! -f "tasks.json" ]; then
     if [ -f "tasks.template.json" ]; then
         echo "📋 tasks.json şablondan oluşturuluyor..."
@@ -34,6 +34,11 @@ if [ ! -f "tasks.json" ]; then
     elif [ -f ".agents/tasks.template.json" ]; then
         cp .agents/tasks.template.json tasks.json
     fi
+fi
+
+if [ -f ".agents/runner/squad-runner.mjs" ]; then
+    chmod +x .agents/runner/squad-runner.mjs
+    echo "⚡ SDLC CLI Runner hazırlandı: .agents/runner/squad-runner.mjs"
 fi
 
 # 3. stryker-config.json Uyarlaması

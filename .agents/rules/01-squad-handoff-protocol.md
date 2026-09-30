@@ -12,16 +12,16 @@ Bu kural, ekibin (Squad) görev akışını, roller arası el sıkışma standar
 
 ---
 
-## 1. Görev Durum Makinesi (Task State Machine)
-`tasks.json` dosyasındaki her görev şu döngüyü sırayla takip eder:
+## 1. Görev Durum Makinesi ve SDLC Runner Motoru
+`tasks.json` dosyasındaki her görev deterministik CLI motoru (`node .agents/runner/squad-runner.mjs`) tarafından yönetilir ve şu döngüyü sırayla takip eder:
 `pending` ➔ `in_progress` ➔ `in_review` ➔ `completed`
 
-*İstisnai Durumlar:*
-- **Engel Durumu (`blocked`):** Beklenmedik dış bağımlılık veya teknik engel çıktığında görev `blocked` durumuna alınır; gerekçesi `reviewNotes` içine yazılır.
-- **Revizyon / Ret Durumu (`changes_requested`):** QA Tester veya Security Reviewer kapısından geçemeyen görev `changes_requested` durumuna çekilir, `rejectionCount` 1 artırılır ve geliştiriciye geri devredilir.
-
-1. **WIP Limiti:** Aynı anda sadece **1 görev** `in_progress` veya `changes_requested` durumunda olabilir.
-2. **Döngü Tetikleme:** Bir görev `completed` olduğunda orkestratör otomatik olarak sıradaki ilk `pending` görevi seçer.
+*İstisnai Durumlar & Devre Kesici (Circuit Breaker):*
+- **Revizyon / Ret Durumu (`changes_requested`):** QA Tester veya Security Reviewer kapısından geçemeyen görev `changes_requested` durumuna çekilir, `rejectionCount` 1 artırılır ve gerekçesiyle geliştiriciye geri devredilir (`squad-runner reject --reason "..."`).
+- **Katı Devre Kesici (Circuit Breaker - Max 3 İterasyon):** Eğer bir görev üst üste 3 kez ret alırsa (`rejectionCount >= 3`), sonsuz döngü ve token israfını önlemek için otonom akış durdurulur. Görev otomatik olarak **`blocked`** durumuna çekilir, `.agents/tasks/{taskId}/rca-report.md` Kök Neden Analizi raporu üretilir ve kullanıcıya eskalasyon yapılır.
+- **WIP Limiti:** Aynı anda sadece **1 görev** `in_progress` veya `changes_requested` durumunda olabilir.
+- **Git Feature Branch İzolasyonu:** Her yeni görevde `feature/{taskId}` dalı açılır. Tüm ara testler, derlemeler ve mutasyonlar bu izole dalda yürütülür. DoD sağlandığında ana dala (`main`) temiz merge edilir.
+- **Görev Başına İzole Çalışma Alanı ($O(1)$ Token):** Her görev `.agents/tasks/{taskId}/` klasöründe kendi `spec.md` ve `arch.md` dosyalarını barındırır. Ajanlar yalnızca aktif görevin dosyalarını okur; geçmiş görevlerin okunmasıyla token israfı yapılması engellenir.
 
 ---
 
@@ -72,29 +72,31 @@ Her görev istisnasız aşağıdaki 5 aşamalı zinciri tamamlamak zorundadır:
 - **Backend Engineer:** `05-backend-development-clean-code-standards.md` kurallarına (fonksiyon yönetimi, class kapsamı, OOP, guard clauses, max 25 satır, belirlenen tasarım kalıpları, `TimeProvider`, `CancellationToken`) tam uyumlu kodlar.
 - **Razor Specialist:** Mimarın ViewModel'i ve UX şartnamesine birebir sadık kalarak `.cshtml` sayfasını Tag Helper'lar ve Bootstrap ile giydirir.
 
-### Aşama 4: Kalite ve Güvenlik Kapısı (Dev ➔ QA & Security)
-- **QA Tester:**
-  - TDD RED_GATE (R-TST-002): Testler implementasyon öncesinde kırmızı mıydı?
-  - Kabul kriterlerini xUnit ve `WebApplicationFactory` entegrasyon testlerine dönüştürür.
-  - Sınır değer (BVA), son kullanıcı kullanılabilirlik ve çift gönderim testlerini yapar.
-  - **Stryker Mutasyon Testi (R-TST-001):** Değişen dosyalarda hayatta kalan mutant sayısı = 0 olmalıdır.
-- **Security Reviewer:**
-  - 5 Motorlu Analiz Hattını çalıştırır: ArchUnitNET, Opengrep, CodeQL, Stryker, Roslyn Analyzers.
-  - OWASP ASVS v5.0, CSRF (`[ValidateAntiForgeryToken]`), XSS, Mass Assignment, IDOR denetimlerini yapar.
-  - PII ve KVKK sızıntı kontrolü (loglara, URL query string'e veya exception'a PII yazılmaması).
-  - S1 ihlali = 0, S2 ihlalleri varsa geçerli `@UdapSuppress` gerekçesi var mı kontrol eder.
-- **Ret Mekanizması:** Tek bir test hatası, hayatta kalan mutant veya S1 güvenlik/mimari ihlalinde görev `changes_requested` durumuna alınır ve revizyon notlarıyla geliştiriciye iade edilir.
+### Aşama 4: Kademeli Kalite ve Güvenlik Kapıları (Tiered Fast-Fail)
+Kalite ve güvenlik motorları kaynakları ve tokenları korumak amacıyla 3 kademeli hızlı-başarısızlık (fail-fast) sırasıyla CLI üzerinden koşturulur (`squad-runner verify --tier <1|2|3>`):
 
-### Aşama 5: Kapanış (QA & Security ➔ PM)
+1. **Kademe 1: Derleme, Linter & Hızlı Birim Testler (< 30 Saniye)**
+   - `node .agents/runner/squad-runner.mjs verify --tier 1`
+   - Derleme (`<TreatWarningsAsErrors>true` / `npm run build`), sıfır hata ve sıfır uyarı.
+   - Hızlı birim testleri (mimari ve entegrasyon hariç). Hata varsa sonraki kademelere geçmeden derhal geliştiriciye döner.
+2. **Kademe 2: Mimari Kurallar & SAST Taraması (1 - 2 Dakika)**
+   - `node .agents/runner/squad-runner.mjs verify --tier 2`
+   - ArchUnitNET / Dependency-Cruiser katman sınırları ve modülerlik denetimi.
+   - Opengrep statik güvenlik taraması (`.agents/opengrep/` veya `.opengrep/`).
+3. **Kademe 3: Scoped Stryker Mutasyon Testi & CodeQL Analizi (Pre-DoD)**
+   - `node .agents/runner/squad-runner.mjs verify --tier 3`
+   - Stryker mutasyon testi yalnızca `git diff` ile değişen dosyalarda çalıştırılır (`--since:main`); hayatta kalan mutant sayısı = 0 olmalıdır.
+   - CodeQL 35 kural paketi (Design Patterns, SonarQube Clean Code, Senior Engineering) sıfır S1 ihlaliyle geçer.
+   - OWASP ASVS v5.0, CSRF, XSS, Mass Assignment ve PII/KVKK sızıntı kontrolleri tamamlanır.
+
+- **Ret Mekanizması & Devre Kesici:** Herhangi bir kademede hata alındığında `node .agents/runner/squad-runner.mjs reject --reason "<hata>"` komutuyla ret verilir. 3. rette devre kesici tetiklenir ve `rca-report.md` üretilir.
+
+### Aşama 5: Kapanış ve Otomatik Merge (QA & Security ➔ PM)
 - **Çıkış Kapısı (Definition of Done - DoD):**
+  - Tüm 3 kademe (Tier 1, Tier 2, Tier 3) yeşil mi? (Evet)
   - Tüm Gherkin kabul kriterleri karşılandı mı? (Evet)
-  - `dotnet build` 0 uyarı, 0 hata ile derlendi mi? (`<TreatWarningsAsErrors>true`) (Evet)
-  - `BannedSymbols.txt` ve Roslyn analizörleri temiz mi? (Evet)
-  - Tüm xUnit ve entegrasyon testleri yeşil mi? (Evet)
-  - Stryker mutasyon testinde değişen dosyalarda hayatta kalan mutant = 0 mı? (Evet)
-  - S1 kurallarında 0 ihlal sağlandı mı? (Evet)
   - Kullanılan Tasarım Kalıpları `artifacts.designPatternsUsed` içine belgelendi mi? (Evet)
-- Şartlar sağlandığında görev `completed` yapılır (`dodMet: true`) ve sıradaki göreve geçilir.
+- **Otomatik Kapanış:** Şartlar sağlandığında `node .agents/runner/squad-runner.mjs complete` çalıştırılır. Görev `completed` yapılır (`dodMet: true`), feature branch ana dala (`main`) merge edilir ve silinir. Sıradaki göreve otomatik geçilir.
 
 ---
 

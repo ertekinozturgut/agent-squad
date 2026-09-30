@@ -1,0 +1,46 @@
+{
+  "$schema": "./squad.schema.json",
+  "stack": "dotnet",
+  "branching": {
+    "enabled": true,
+    "prefix": "feature/",
+    "baseBranch": "main",
+    "autoMergeOnDoD": true,
+    "deleteOnMerge": true
+  },
+  "circuitBreaker": {
+    "maxRejections": 3,
+    "onTrip": "block_and_report",
+    "rcaDirectory": ".agents/tasks/{taskId}"
+  },
+  "tasksDirectory": ".agents/tasks",
+  "tieredGates": {
+    "tier1": {
+      "name": "Derleme, Linter & Hızlı Birim Testler",
+      "description": "Saniyeler içinde derleme, tip kontrolü ve temel test doğrulaması.",
+      "commands": {
+        "dotnet": "dotnet build -c Release --nologo && dotnet test --filter \"Category!=Architecture&Category!=Integration\" --no-build --nologo",
+        "nodejs": "npm test -- --bail",
+        "nextjs": "npm run build && npm test -- --bail"
+      }
+    },
+    "tier2": {
+      "name": "Mimari Kurallar & SAST Taraması",
+      "description": "Katman bağımlılıkları (ArchUnit / Dependency-Cruiser) ve Opengrep SAST.",
+      "commands": {
+        "dotnet": "dotnet test --filter \"Category=Architecture\" --no-build --nologo && opengrep scan --config .opengrep/",
+        "nodejs": "npx depcruise src --config .dependency-cruiser.js && opengrep scan --config .agents/opengrep/",
+        "nextjs": "npx depcruise src --config .dependency-cruiser.js && opengrep scan --config .agents/opengrep/"
+      }
+    },
+    "tier3": {
+      "name": "Stryker Mutasyon Testi (Scoped) & CodeQL",
+      "description": "Yalnızca değişen dosyalarda (%100 mutant öldürme) Stryker mutasyonu ve derin analiz.",
+      "commands": {
+        "dotnet": "dotnet stryker --since:main --config-file-path stryker-config.json",
+        "nodejs": "npx stryker run --since:main",
+        "nextjs": "npx stryker run --since:main"
+      }
+    }
+  }
+}
